@@ -229,7 +229,7 @@
     const tick = () => {
       if (v._tok !== tok) return;
       const left = s.vFreeze - v.currentTime;
-      if (left <= (s.slow || 1.0)) v.playbackRate = Math.max(.22, .22 + left * .7);
+      if (left <= (s.slow || 1.0)) v.playbackRate = Math.max(.5, .5 + left * .5);
       if (left <= 0 || v.ended) { v.pause(); freezeHit(n); return; }
       requestAnimationFrame(tick);
     };
@@ -239,7 +239,7 @@
     const sec = els[n], bgl = $(".bgl", sec), v = $(".vid", sec), tl = gsap.timeline();
     flash(tl, 0, .55);
     tl.fromTo(bgl, { scale: 1.12 }, { scale: 1, duration: .55, ease: "power4.out" }, 0);
-    tl.fromTo(v, { filter: "contrast(1.35) saturate(0) brightness(1.35)" }, { filter: "contrast(1.08) saturate(1.1) brightness(1)", duration: .7, ease: "power2.out" }, 0);
+    tl.fromTo(v, { filter: "contrast(1.35) saturate(0) brightness(1.35)" }, { filter: "none", duration: .7, ease: "power2.out" }, 0);
     letterbox(tl, .3, false);
     shake(tl, 0, 11, .35);
     tl.add(() => enterText(n), .45);

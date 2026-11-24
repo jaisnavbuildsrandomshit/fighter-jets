@@ -9,7 +9,7 @@ window.SCENES = [
     credit: "F-22s of the 43rd FS and a T-38 · U.S. Air Force photo by MSgt J. Wilcox (public domain)",
     notes: "Fighter jets. Seven aircraft: the Super Hornet, two Sukhois, the F-22, and three stealth pioneers: the Ho 229, the B-2 and the F-117. Twenty seconds each." },
 
-  { id: "fa18", photo: "img/freeze_fa18.jpg", video: "vid/fa18_northernedge.mp4", vStart: 24.4, vFreeze: 27.5, rate: 1.3, fx: .5, fy: .5, over: 1, heading: 90,
+  { id: "fa18", photo: "img/freeze_fa18.jpg", video: "https://d34w7g4gy10iej.cloudfront.net/video/2105/DOD_108327935/DOD_108327935.mp4", vStart: 24.4, vFreeze: 27.5, rate: 1.3, fx: .5, fy: .5, over: 1, heading: 90,
     shade: "linear-gradient(0deg, rgba(5,7,10,.7) 0%, rgba(5,7,10,0) 40%)",
     model: "F/A-18F Super Hornet", maker: "Boeing · US Navy", head: [["CAUGHT BY", "A WIRE."], "bottom"],
     calls: [ [858, 169, 760, 70, "TWO SEATS", "Pilot + weapons officer", 1], [590, 112, 450, 60, "TWIN TAILS", "Control at low speed", 1],
@@ -35,7 +35,7 @@ window.SCENES = [
     credit: "Su-57 (T-50 prototype) · Photo: Rulexip, CC BY-SA 3.0",
     notes: "The Su-57 is Russia's stealth fighter, NATO name Felon. It first flew in January 2010; the first production jet was delivered in December 2020. Its engine nozzles can steer the thrust, so it turns extremely hard. That rainbow cloud is a vapor shell that forms close to the speed of sound." },
 
-  { id: "f22", photo: "img/freeze_f22.jpg", video: "https://d34w7g4gy10iej.cloudfront.net/video/2204/DOD_108904771/DOD_108904771.mp4", vStart: 15.5, vFreeze: 19.95, rate: 1.4, fx: .5, fy: .5, over: 1, heading: 90,
+  { id: "f22", photo: "img/freeze_f22.jpg", video: "https://d34w7g4gy10iej.cloudfront.net/video/2204/DOD_108904771/DOD_108904771.mp4", vStart: 16.5, vFreeze: 19.95, rate: 1.0, fx: .5, fy: .5, over: 1, heading: 90,
     model: "Lockheed Martin F-22 Raptor", maker: "USA · 5th generation", head: [["FIRST OF THE", "FIFTH GEN."], "top"], headSize: 120, specsTop: true,
     calls: [ [750, 290, 700, 170, "STEALTH CANOPY", "Coated so radar can't see in", 1], [650, 365, 760, 430, "CARET INTAKES", "Hide the engine fans from radar"],
              [240, 280, 310, 222, "CANTED TWIN TAILS", "Angled to scatter radar"], [185, 340, 60, 470, "AFTERBURNER", "Heat shimmer off the nozzles"],

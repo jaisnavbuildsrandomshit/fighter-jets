@@ -28,7 +28,8 @@
   #backdrop { position: absolute; inset: -12%; width: 124%; height: 124%; object-fit: cover; filter: blur(28px) brightness(.9) saturate(1.1); }
   .cam, .bgl { position: absolute; inset: 0; will-change: transform; }
   .streak { position: absolute; max-width: none; opacity: 0; pointer-events: none; }
-  .photo, .vid { position: absolute; max-width: none; user-select: none; filter: contrast(1.08) saturate(1.1); }
+  .photo { position: absolute; max-width: none; user-select: none; filter: contrast(1.08) saturate(1.1); }
+  .vid { position: absolute; max-width: none; user-select: none; }
   .shade { position: absolute; inset: -6%; pointer-events: none; }
 
   /* the flying jet + afterburners */
@@ -119,7 +120,7 @@
   #ready .s { margin-top: 26px; font-size: 22px; letter-spacing: .4em; color: var(--amber); animation: blink 1.4s steps(2) infinite; }
   #ready .h { margin-top: 70px; font-size: 17px; letter-spacing: .2em; opacity: .55; }
   @keyframes blink { 50% { opacity: .25 } }
-  #fx { position: absolute; inset: 0; z-index: 40; pointer-events: none; overflow: hidden; }
+  #fx { display: none; }
   #fx img { position: absolute; left: 0; top: 0; width: 1400px; opacity: 0; filter: blur(5px) brightness(1.08); will-change: transform, opacity; }
 </style>
 </head>
