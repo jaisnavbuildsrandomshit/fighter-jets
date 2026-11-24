@@ -4,7 +4,7 @@ A cinematic presentation: seven aircraft, twenty seconds each.
 
 **Live:** https://jaisnavbuildsrandomshit.github.io/fighter-jets/
 
-Every jet is a moving clip: it plays, slows into a speed ramp and slams to a freeze frame, then Ace Combat-style lock-on reticles and Watch Dogs-style profiler cards tag its special features. Scenes hard-cut from one jet to the next, with no sound. Four jets use real military footage; the Su-57, F-14 and F-117 have no free real footage, so they use videos embedded from YouTube (a Su-57 film and official F-14 and F-117 game trailers).
+Every jet is a moving clip: it plays, slows into a speed ramp and slams to a freeze frame, then Ace Combat-style lock-on reticles and Watch Dogs-style profiler cards tag its special features. Scenes hard-cut from one jet to the next, with no sound. Four jets use real military footage; the Su-57, F-14 and F-117 have no free real footage, so they use videos embedded from YouTube (4K Su-57 airshow footage and official F-14 and F-117 game trailers).
 
 ## Controls
 
@@ -43,7 +43,7 @@ Fonts: Archivo Black, Barlow Condensed, Inter and Share Tech Mono (Google Fonts)
 | F/A-18 Super Hornet | [Navy Super Hornets conduct flight operations during Northern Edge 2021](https://www.dvidshub.net/video/793950), U.S. Navy via DVIDS | Public domain |
 | Su-35 | [Su-35S multipurpose fighter](https://commons.wikimedia.org/wiki/File:Su-35S_multipurpose_fighter.webm), Russian Ministry of Defence (mil.ru), streamed from Wikimedia Commons | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | B-2 Spirit | [KC-135 refuels B-2 Spirit for Super Bowl LV](https://www.dvidshub.net/video/782929), U.S. Air Force via DVIDS | Public domain |
-| Su-57 | [Sukhoi Su-57 - Pushing the Limits](https://www.youtube.com/watch?v=FE6CTvs_g9Y), Haci Productions (YouTube embed) | © respective owners |
+| Su-57 | [Complete Aerobatic Display of SU-57 FELON! 4K](https://www.youtube.com/watch?v=WIl1cufYYF0), Praneeth Franklin (YouTube embed) | © Praneeth Franklin |
 | F-14 Tomcat | [DCS F-14A release trailer](https://www.youtube.com/watch?v=RTWSu4Uxsd4), Heatblur Simulations (game footage, official YouTube embed) | © Heatblur Simulations |
 | F-117 | ['Firebirds' update trailer](https://www.youtube.com/watch?v=YkJHT2NEXqw), War Thunder / Gaijin Entertainment (game footage, official YouTube embed) | © Gaijin Entertainment |
 
