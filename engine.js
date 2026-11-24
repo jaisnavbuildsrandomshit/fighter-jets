@@ -303,7 +303,7 @@
   /* ---------- foreground clouds + lens fringing during the pan ---------- */
   function fx(n, tl, at, T) {
     const s = SCENES[n], [vx, vy] = vec(s.heading ?? 90), zoom = !!(s.cut && s.cut.zoom);
-    Audio.flyby(vx, T, s.cut ? 1 : .6);
+    // sound removed: Audio.flyby(vx, T, s.cut ? 1 : .6);
     $$("#fx img").forEach((c, k) => {
       const off = k ? .35 : -.25, D = span(vx, vy) * 1.5;
       if (zoom) {
@@ -369,7 +369,7 @@
   let started = false;
   addEventListener("keydown", e => {
     if (!started) { e.preventDefault(); begin(); return; }
-    if (/^[mM]$/.test(e.key)) { Audio.toggle(); return; }
+    // sound removed (M key no longer used)
     if (["ArrowRight", "PageDown", " ", "Enter"].includes(e.key)) { e.preventDefault(); go(cur + 1); }
     else if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); go(cur - 1); }
     else if (/^[pP]$/.test(e.key)) { paused = !paused; if (paused && timer) timer.pause(); else restartTimer(); }
@@ -415,7 +415,7 @@
   // cold open: black, a jet rumbles in from far away, then the first shot whips in
   function begin(silent) {
     if (!loaded || started) return; started = true;
-    Audio.init(); fit();
+    fit();
     if (!silent && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
     gsap.killTweensOf("#ready"); gsap.to("#ready", { opacity: 0, duration: .3, onComplete: () => { const r = document.getElementById("ready"); if (r) r.remove(); } });
     backdrop(cur);
