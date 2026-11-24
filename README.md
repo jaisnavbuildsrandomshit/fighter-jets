@@ -18,7 +18,7 @@ Every jet is a moving clip: it plays, slows into a speed ramp and slams to a fre
 | F | Fullscreen |
 | Home | Back to the start |
 
-Start at a given scene with `#N` in the URL (for example `#4` for the F-22).
+Start at a given scene with `#N` in the URL (for example `#5` for the F-22). Scene 1 is a "How to read a jet" decoder: role letters, generations and jargon.
 
 ## Photo credits
 

@@ -9,6 +9,17 @@ window.SCENES = [
     credit: "F-22s of the 43rd FS and a T-38 · U.S. Air Force photo by MSgt J. Wilcox (public domain)",
     notes: "Fighter jets. Seven aircraft: the Super Hornet, the Su-35, the Su-57, the F-22, the F-14 Tomcat, and two stealth pioneers: the B-2 and the F-117. Twenty seconds each." },
 
+  { id: "classes", photo: "img/sky.jpg", streak: "img/streak_sky.jpg", fx: 0, fy: .35, over: 1.15, heading: 90, hold: 30,
+    shade: "linear-gradient(180deg, rgba(5,8,12,.82), rgba(5,8,12,.72) 50%, rgba(5,8,12,.85))",
+    head: [["HOW TO READ A JET"], "top"], headSize: 96,
+    classes: [
+      ["THE LETTERS", [["F", "Fighter: fights other aircraft"], ["A", "Attack: hits targets on the ground"], ["F/A", "Fighter + attack in one jet"], ["B", "Bomber: heavy loads, long range"], ["Su", "Sukhoi: Russian jets carry the maker's name"]]],
+      ["GENERATIONS", [["4th", "1970s–80s: agile, radar missiles · F-14"], ["4.5", "Upgraded 4th gen · Super Hornet, Su-35"], ["5th", "Stealth + sensor fusion · F-22, Su-57"], ["6th", "Next up · Boeing F-47, in development"]]],
+      ["THE JARGON", [["STEALTH", "Shaped and coated so radar barely sees it"], ["BURNER", "Afterburner: fuel lit in the exhaust for extra thrust"], ["VECTOR", "Thrust vectoring: nozzles that steer"], ["MACH 1", "Speed of sound, ~1,235 km/h at sea level"], ["NATO", "Nicknames for Russian jets: Flanker, Felon"]]]
+    ],
+    credit: "View from an airliner window · Photo: Famartin, CC BY-SA 4.0",
+    notes: "Quick decoder before the jets. US jets are named by role: F for fighter, A for attack, F/A for both, B for bomber. The F-117 is the odd one: it carries an F but is really a bomb-dropping strike jet. Russian jets carry the design bureau's name, like Su for Sukhoi, and NATO gives them nicknames like Flanker and Felon. Generations: 4th gen is the agile jets of the 70s and 80s, 4.5 is the upgraded versions, 5th gen adds stealth and sensor fusion, and 6th gen, like the F-47, is next." },
+
   { id: "fa18", photo: "img/freeze_fa18.jpg", video: "https://d34w7g4gy10iej.cloudfront.net/video/2105/DOD_108327935/DOD_108327935.mp4", vStart: 24.4, vFreeze: 27.5, rate: 1.3, fx: .5, fy: .5, over: 1, heading: 90,
     shade: "linear-gradient(0deg, rgba(5,7,10,.7) 0%, rgba(5,7,10,0) 40%)",
     model: "F/A-18F Super Hornet", maker: "Boeing · US Navy", head: [["CAUGHT BY", "A WIRE."], "bottom"],
@@ -72,7 +83,7 @@ window.SCENES = [
 
   { id: "end", photo: "img/title.jpg", streak: "img/streak_end.jpg", fx: .3, fy: .6, over: 1.3, heading: 315,
     shade: "linear-gradient(0deg, rgba(10,7,3,.75) 0%, rgba(10,7,3,0) 55%)",
-    head: [["WHICH ONE", "WOULD YOU FLY?"], "bottom"], end: true,
+    head: [["END OF", "BRIEFING."], "bottom"], end: true,
     credit: "F-22 Raptor at twilight · U.S. Air Force photo by 2nd Lt. Samuel Eckholm (public domain)",
-    notes: "Carrier jet, the Flanker, the rainbow Sukhoi, the Raptor, the Tomcat and two stealth pioneers. Which one would you fly? Thanks for listening." }
+    notes: "Carrier jet, the Flanker, the rainbow Sukhoi, the Raptor, the Tomcat and two stealth pioneers. Thanks for listening." }
 ];

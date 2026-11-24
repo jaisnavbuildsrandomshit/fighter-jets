@@ -56,6 +56,7 @@
     else html += `<div class="head" style="${hs}${pos === "top" ? "top:120px" : "bottom:150px"}">${lines.map(block).join("")}</div>`;
     if (s.sub) html += `<div class="sub">${s.sub}</div>`;
     if (s.specs) html += `<div class="specs${s.specsLeft ? " left" : ""}${s.specsTop ? " top" : ""}">${s.specs.map(p => `<div class="spec"><small>${p[0]}</small><b data-v="${p[1]}">${p[1]}</b></div>`).join("")}</div>`;
+    if (s.classes) html += `<div class="cls">${s.classes.map(c => `<div class="col"><h4>${c[0]}</h4>${c[1].map(r => `<div class="row"><b>${r[0]}</b><span>${r[1]}</span></div>`).join("")}</div>`).join("")}</div>`;
     if (s.timeline) html += `<div class="tl"><div class="axis"></div>${s.timeline.map((n, k) =>
       `<div class="node" style="left:${k * 22}%"><div class="yr${k === 0 || k === s.timeline.length - 1 ? " hot" : ""}">${n[0]}</div><div class="dot"></div><div class="nm">${n[1]}</div><div class="ds">${n[2]}</div></div>`).join("")}</div>`;
     if (s.end) html += `<button class="btn" id="again">↻ FLY AGAIN</button>`;
@@ -186,6 +187,8 @@
       const target = +m[1].replace(/,/g, ""), o = { n: target > 1900 ? target - 60 : 0 };
       tl.to(o, { n: target, duration: 1.1, ease: "power2.out", onUpdate: () => { b.textContent = Math.round(o.n) + m[2]; } }, .95 + k * .1);
     });
+    tl.fromTo($$(".cls h4", sec), { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: .5, stagger: .15 }, .35);
+    tl.fromTo($$(".cls .row", sec), { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: .45, stagger: .06, ease: "power2.out" }, .5);
     tl.fromTo($$(".tl .axis", sec), { scaleX: 0 }, { scaleX: 1, duration: 1.4, ease: "expo.out" }, .2);
     tl.fromTo($$(".tl .node", sec), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .6, stagger: .15 }, .4);
     tl.fromTo($$(".credit, .btn", sec), { opacity: 0 }, { opacity: 1, duration: .8 }, 1.2);
@@ -194,7 +197,7 @@
   function resetText(sec) {
     gsap.set($(".text", sec), { opacity: 1 });
     gsap.set($$(".head .ln > span", sec), { yPercent: 115 });
-    gsap.set($$(".lab, .spec, .credit, .btn, .tl .node, .kicker .tag, .kicker .mdl, .kicker .mk, .sub", sec), { opacity: 0 });
+    gsap.set($$(".lab, .spec, .credit, .btn, .tl .node, .cls h4, .cls .row, .kicker .tag, .kicker .mdl, .kicker .mk, .sub", sec), { opacity: 0 });
     gsap.set($$(".kicker .rule, .tl .axis", sec), { scaleX: 0 });
     gsap.set($$("svg.calls g.co", sec), { opacity: 0 });
   }
