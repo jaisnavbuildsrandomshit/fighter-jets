@@ -204,9 +204,8 @@
   // pre-load the start of the next clip while the current scene is on screen
   function prime(n) { const s = SCENES[n], v = s && s.video && $(".vid", els[n]); if (v && v.paused) { v.preload = "auto"; v.currentTime = s.vStart; } }
   function flash(tl, at, k = .9) { tl.fromTo("#flash", { opacity: k }, { opacity: 0, duration: .35, ease: "power2.out" }, at); }
-  function rgb(tl, el, at, dur) {
-    tl.fromTo(el, { filter: "contrast(1.08) saturate(1.1) drop-shadow(16px 0 0 rgba(255,0,60,.55)) drop-shadow(-16px 0 0 rgba(0,200,255,.55))" },
-      { filter: "contrast(1.08) saturate(1.1) drop-shadow(0px 0 0 rgba(255,0,60,0)) drop-shadow(0px 0 0 rgba(0,200,255,0))", duration: dur, ease: "power2.out" }, at);
+  function rgb(tl, el, at, dur) { /* off: filters on 4K video cause stutter */ }
+  function rgbOff(tl, el, at, dur) {
   }
   function letterbox(tl, at, on) { tl.to(["#lbt", "#lbb"], { height: on ? 118 : 0, duration: on ? .22 : .6, ease: on ? "power4.out" : "power3.inOut" }, at); }
   function arriveVideo(n, tl, at, T) {
@@ -214,7 +213,9 @@
     gsap.set(cam, { scale: 1, x: 0, y: 0, xPercent: 0, yPercent: 0, rotation: 0 });
     gsap.set(sec, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 0 }); gsap.set(v, { opacity: 1 });
     const cut = at + .12;   // hard cut on the flash, before the old shot has left
-    tl.add(() => { v.currentTime = s.vStart; v.playbackRate = s.rate || 1.5; v.play().catch(() => {}); watch(n); }, cut - .08);
+    tl.add(() => { v.currentTime = s.vStart; v.playbackRate = s.rate || 1.5; v.play().catch(() => {}); watch(n);
+      // if the clip cannot play here, fall back to the freeze-frame photo so the slide still works
+      setTimeout(() => { if (v._tok && (v.readyState < 3 || v.paused) && v.currentTime < s.vStart + .2) { v._tok = null; gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); freezeHit(n); } }, 6000); }, cut - .08);
     tl.set(sec, { opacity: 1 }, cut);
     flash(tl, cut);
     tl.fromTo(bgl, { scale: 1.4, x: 0, y: 0 }, { scale: 1.05, duration: .7, ease: "expo.out" }, cut);
@@ -239,7 +240,7 @@
     const sec = els[n], bgl = $(".bgl", sec), v = $(".vid", sec), tl = gsap.timeline();
     flash(tl, 0, .55);
     tl.fromTo(bgl, { scale: 1.12 }, { scale: 1, duration: .55, ease: "power4.out" }, 0);
-    tl.fromTo(v, { filter: "contrast(1.35) saturate(0) brightness(1.35)" }, { filter: "none", duration: .7, ease: "power2.out" }, 0);
+
     letterbox(tl, .3, false);
     shake(tl, 0, 11, .35);
     tl.add(() => enterText(n), .45);
@@ -339,7 +340,7 @@
       gsap.set($(".cam", from), { clearProps: "all" }); gsap.set($(".bgl", from), { clearProps: "transform" });
       gsap.set($(".bgl", to), { "--f": "0%" }); gsap.set($(".bgl", from), { "--f": "0%" });
       if ($(".streak", from)) gsap.set($(".streak", from), { opacity: 0 });
-      cur = n; busy = false; hud(); startAmbient(n); restartTimer(); prime(n + 1);
+      cur = n; busy = false; hud(); startAmbient(n); restartTimer();
     } });
     gsap.set($(".cam", from), { scale: 1, xPercent: 0, yPercent: 0 });
     const T = 1.6, ease = "power3.inOut", at = .2, zoom = !!(s.cut && s.cut.zoom);
@@ -424,7 +425,7 @@
     fx(cur, tl, at, T);
     tl.to("#curtain", { opacity: 0, duration: .5, onComplete: () => { const c = document.getElementById("curtain"); if (c) c.remove(); } }, at);
     if (!SCENES[cur].video) tl.add(() => enterText(cur), at + landed + .2);
-    tl.add(() => { hud(); startAmbient(cur); restartTimer(); prime(cur + 1); }, at + landed);
+    tl.add(() => { hud(); startAmbient(cur); restartTimer(); SCENES.forEach((_, k) => prime(k)); }, at + landed);
   }
   addEventListener("resize", () => els.forEach((_, i) => layout(i)));
 })();
