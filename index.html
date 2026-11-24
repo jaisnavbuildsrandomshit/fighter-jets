@@ -62,13 +62,7 @@
   .cls .row { display: flex; align-items: baseline; gap: 18px; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,.12); }
   .cls .row b { flex: 0 0 178px; white-space: nowrap; font-family: "Archivo Black", sans-serif; font-weight: 400; font-size: 30px; color: #fff; letter-spacing: .01em; }
   .cls .row span { font-family: "Inter", sans-serif; font-size: 23px; line-height: 1.3; color: #d8e2ee; }
-  /* centre HUD pipper on game-trailer scenes (also covers YouTube's paused icon) */
-  .pip { position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; opacity: 0; pointer-events: none;
     background: radial-gradient(circle, rgba(6,9,12,.96) 0 62%, rgba(6,9,12,.0) 63%); border: 2px solid #7dffa0; box-shadow: 0 0 8px rgba(125,255,160,.35); }
-  .pip::before, .pip::after { content: ""; position: absolute; background: #7dffa0; }
-  .pip::before { left: -14px; right: -14px; top: 50%; height: 2px; margin-top: -1px; -webkit-mask: linear-gradient(90deg, #000 0 12px, transparent 12px calc(100% - 12px), #000 calc(100% - 12px)); mask: linear-gradient(90deg, #000 0 12px, transparent 12px calc(100% - 12px), #000 calc(100% - 12px)); }
-  .pip::after { top: -14px; bottom: -14px; left: 50%; width: 2px; margin-left: -1px; -webkit-mask: linear-gradient(180deg, #000 0 12px, transparent 12px calc(100% - 12px), #000 calc(100% - 12px)); mask: linear-gradient(180deg, #000 0 12px, transparent 12px calc(100% - 12px), #000 calc(100% - 12px)); }
-  .pip i { position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: #ff3d3d; box-shadow: 0 0 8px #ff3d3d; }
   /* callouts: Ace Combat lock-on reticle + Watch Dogs profiler card */
   svg.calls .ld { fill: none; stroke: #7dffa0; stroke-width: 2; stroke-dasharray: none; opacity: .9; }
   svg.calls .tick { stroke: #7dffa0; stroke-width: 3; }

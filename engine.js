@@ -41,7 +41,6 @@
           <div class="shade" style="background:${s.shade || "none"}"></div>
         </div>
         ${s.cut ? `<div class="jet"><div class="flames"></div><img src="${s.cut.src}" alt=""></div>` : ""}
-        ${s.yt ? `<div class="pip"><i></i></div>` : ""}
         <svg class="calls" width="${SW}" height="${SH}" viewBox="0 0 ${SW} ${SH}"></svg>
         <div class="labs"></div>
       </div>
@@ -127,7 +126,6 @@
     const keepOut = $$(".head, .kicker, .specs, .credit, .sub", sec).filter(e => e.offsetWidth).map(rel);
     const pts = (s.calls || []).map(c => m.pt(c[0], c[1]));
     pts.forEach(([x, y]) => keepOut.push({ x: x - 44, y: y - 62, w: 88, h: 106 }));
-    if (s.yt) keepOut.push({ x: SW / 2 - 36, y: SH / 2 - 36, w: 72, h: 72 });
     const hit = (a, b, p = 14) => a.x < b.x + b.w + p && b.x < a.x + a.w + p && a.y < b.y + b.h + p && b.y < a.y + a.h + p;
     const placed = [];
     (s.calls || []).forEach((c, k) => {
@@ -310,7 +308,7 @@
   function freezeHit(n) {
     const sec = els[n], bgl = $(".bgl", sec), v = $(".vid", sec), tl = gsap.timeline();
     // YouTube flashes a small pause icon when it stops: a full white flash covers it
-    if (SCENES[n].yt) { flash(tl, 0, 1, .75); tl.set($(".pip", sec), { opacity: 1 }, 0); } else flash(tl, 0, .55);
+    if (SCENES[n].yt) flash(tl, 0, 1, .75); else flash(tl, 0, .55);
     tl.fromTo(bgl, { scale: 1.12 }, { scale: 1, duration: .55, ease: "power4.out" }, 0);
 
     letterbox(tl, .3, false);
@@ -410,7 +408,7 @@
     if (!s.video && !s.yt) { gsap.set($(".photo", sec), { opacity: 1 }); return false; }
     const v = $(".vid", sec);
     gsap.set($(".photo", sec), { opacity: 0 }); gsap.set(v, { opacity: 1 });
-    gsap.set(["#lbt", "#lbb"], { height: 118 }); if (s.yt) gsap.set($(".pip", sec), { opacity: 1 });   // HUD gun-cross sits over YouTube's centre play/pause icon the whole time
+    gsap.set(["#lbt", "#lbb"], { height: 118 });
     if (Math.abs(v.currentTime - s.vStart) > .05) v.currentTime = s.vStart;
     v.playbackRate = s.rate || 1; v.play().catch(() => {}); watch(n);
     // YouTube shows a play icon as it starts: stay black until it has faded
