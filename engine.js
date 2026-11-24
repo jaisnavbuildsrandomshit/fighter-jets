@@ -73,7 +73,7 @@
   }
   function ytVid(box, s) {
     const host = document.createElement("div"); box.appendChild(host);
-    let p = null, ok = false, want = null, rate = 1, t = s.vStart, st = -1, lastR = -1, lastAt = 0;
+    let p = null, ok = false, want = null, rate = 1, t = s.vStart, st = -1, lastR = -1, lastAt = 0, live = false;
     loadYT().then(() => {
       p = new YT.Player(host, { videoId: s.yt, width: 1920, height: 1080,
         playerVars: { autoplay: 0, mute: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, playsinline: 1, rel: 0, start: Math.floor(s.vStart), origin: location.origin },
@@ -87,15 +87,15 @@
         const r = p.getCurrentTime(), now = performance.now();
         if (r !== lastR) { lastR = r; lastAt = now; }
         return st === 1 ? r + Math.min(.5, (now - lastAt) / 1000 * rate) : r;
-      }, set: x => { t = x; lastR = -1; if (ok) p.seekTo(x, true); } },
+      }, set: x => { t = x; lastR = -1; if (ok) { p.seekTo(x, true); if (!live) p.pauseVideo(); } } },   // seeking a cued player starts it: keep it paused unless told to play
       paused: { get: () => st !== 1 && st !== 3 },
       ended: { get: () => st === 0 },
       readyState: { get: () => ok ? 4 : 0 },
       playbackRate: { get: () => rate, set: x => { if (Math.abs(x - rate) < .05) return; rate = x; if (ok) p.setPlaybackRate(x); } },
       preload: { get: () => "auto", set() {} }
     });
-    box.play = () => { const run = () => { p.setPlaybackRate(rate); p.playVideo(); }; if (ok) run(); else want = run; return Promise.resolve(); };
-    box.pause = () => { want = null; if (ok) p.pauseVideo(); };
+    box.play = () => { live = true; const run = () => { p.setPlaybackRate(rate); p.playVideo(); }; if (ok) run(); else want = run; return Promise.resolve(); };
+    box.pause = () => { live = false; want = null; if (ok) p.pauseVideo(); };
   }
   SCENES.forEach((s, i) => { if (s.yt) ytVid($(".vid", els[i]), s); });
 
@@ -121,15 +121,41 @@
     }
     const svg = $("svg.calls", sec), labs = $(".labs", sec);
     svg.innerHTML = ""; labs.innerHTML = "";
+    // everything a card must not cover: headline, kicker, specs, credit, every lock box, the centre gun-cross
+    const sr = sec.getBoundingClientRect(), k0 = sr.width / SW || 1;
+    const rel = el => { const r = el.getBoundingClientRect(); return { x: (r.left - sr.left) / k0, y: (r.top - sr.top) / k0, w: r.width / k0, h: r.height / k0 }; };
+    const keepOut = $$(".head, .kicker, .specs, .credit, .sub", sec).filter(e => e.offsetWidth).map(rel);
+    const pts = (s.calls || []).map(c => m.pt(c[0], c[1]));
+    pts.forEach(([x, y]) => keepOut.push({ x: x - 44, y: y - 62, w: 88, h: 106 }));
+    if (s.yt) keepOut.push({ x: SW / 2 - 36, y: SH / 2 - 36, w: 72, h: 72 });
+    const hit = (a, b, p = 14) => a.x < b.x + b.w + p && b.x < a.x + a.w + p && a.y < b.y + b.h + p && b.y < a.y + a.h + p;
+    const placed = [];
     (s.calls || []).forEach((c, k) => {
-      const [px, py] = m.pt(c[0], c[1]); let [lx, ly] = m.pt(c[2], c[3]);
-      lx = Math.max(60, Math.min(SW - 60, lx)); ly = Math.max(150, Math.min(SH - 150, ly));
-      // keep labels on screen: flip side if the label would run off an edge
-      const estW = 60 + Math.max(17.5 * c[4].length, 12.4 * c[5].length);
-      let dir = c[6] ? -1 : 1;
-      if (dir > 0 && lx + estW > SW - 40) dir = -1;
-      if (dir < 0 && lx - estW < 40) dir = 1;
-      const run = Math.max(330, estW), ex = lx + dir * run, b = 26, R = b * 1.55;
+      const [px, py] = pts[k];
+      // build the card first (text filled in) so its real size can be measured
+      const lab = document.createElement("div"); lab.className = "lab";
+      lab.innerHTML = `<div class="plate"><div class="hdr"><em>${String(k + 1).padStart(2, "0")}</em>PROFILER · TGT ${String(k + 1).padStart(2, "0")}</div><b><span class="ty" data-t="${c[4]}">${c[4]}</span></b><span class="ty d" data-t="${c[5]}">${c[5]}</span><i class="scan"></i></div>`;
+      labs.appendChild(lab);
+      const cw = lab.offsetWidth || 420, ch = lab.offsetHeight || 112;
+      // try the planned spot, then the other side, then nudge up/down until it is fully on screen and covers nothing
+      const [lx0, ly0] = m.pt(c[2], c[3]), pref = c[6] ? -1 : 1;
+      let best = null;
+      for (const dy of [0, -70, 70, -140, 140, -210, 210, -280, 280, -350, 350]) {
+        for (const dir of [pref, -pref]) {
+          const ly = Math.max(ch + 40, Math.min(SH - 50, ly0 + dy));
+          let x = dir > 0 ? lx0 : lx0 - cw;
+          x = Math.max(28, Math.min(SW - 28 - cw, x));
+          const r = { x, y: ly - ch - 8, w: cw, h: ch };
+          if (!keepOut.some(o => hit(r, o)) && !placed.some(o => hit(r, o))) { best = { r, ly, dir }; break; }
+        }
+        if (best) break;
+      }
+      if (!best) { const ly = Math.max(ch + 40, Math.min(SH - 50, ly0)); let x = Math.max(28, Math.min(SW - 28 - cw, pref > 0 ? lx0 : lx0 - cw)); best = { r: { x, y: ly - ch - 8, w: cw, h: ch }, ly, dir: pref }; }
+      placed.push(best.r);
+      const { r, ly, dir } = best, lx = dir > 0 ? r.x : r.x + cw, ex = dir > 0 ? r.x + cw : r.x;
+      lab.style.left = r.x + "px"; lab.style.top = r.y + "px"; lab.style.width = cw + "px";
+      if (dir < 0) lab.querySelector(".plate").style.textAlign = "right";
+      const b = 26, R = b * 1.55;
       // Ace Combat-style lock-on: a spinning diamond closes in, snaps to a lock box, "LOCK" blinks
       svg.insertAdjacentHTML("beforeend", `<g class="co">
         <circle class="pulse" cx="${px}" cy="${py}" r="10"/>
@@ -138,11 +164,6 @@
         <text class="lk" x="${px}" y="${py - b - 9}" text-anchor="middle">LOCK</text>
         <circle class="dot" cx="${px}" cy="${py}" r="4"/>
         <polyline class="ld" points="${px},${py} ${lx},${ly} ${ex},${ly}"/><line class="tick" x1="${ex}" y1="${ly - 9}" x2="${ex}" y2="${ly + 9}"/></g>`);
-      // Watch Dogs-style profiler card
-      const lab = document.createElement("div"); lab.className = "lab" + (dir < 0 ? " r" : "");
-      lab.innerHTML = `<div class="plate"><div class="hdr"><em>${String(k + 1).padStart(2, "0")}</em>PROFILER · TGT ${String(k + 1).padStart(2, "0")}</div><b><span class="ty" data-t="${c[4]}"></span></b><span class="ty d" data-t="${c[5]}"></span><i class="scan"></i></div>`;
-      lab.style.top = (ly - 122) + "px"; lab.style.left = lx + "px";
-      labs.appendChild(lab);
     });
     return true;
   }
@@ -281,7 +302,7 @@
       if (v._tok !== tok) return;
       const left = s.vFreeze - v.currentTime;
       if (left <= (s.slow || 1.0)) v.playbackRate = Math.max(.5, .5 + left * .5);
-      if (left <= 0 || v.ended) { v.pause(); freezeHit(n); return; }
+      if (left <= 0 || v.ended) { v._tok = null; v.pause(); freezeHit(n); return; }
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
@@ -389,7 +410,7 @@
     if (!s.video && !s.yt) { gsap.set($(".photo", sec), { opacity: 1 }); return false; }
     const v = $(".vid", sec);
     gsap.set($(".photo", sec), { opacity: 0 }); gsap.set(v, { opacity: 1 });
-    gsap.set(["#lbt", "#lbb"], { height: 118 }); if (s.yt) gsap.set($(".pip", sec), { opacity: 0 });
+    gsap.set(["#lbt", "#lbb"], { height: 118 }); if (s.yt) gsap.set($(".pip", sec), { opacity: 1 });   // HUD gun-cross sits over YouTube's centre play/pause icon the whole time
     if (Math.abs(v.currentTime - s.vStart) > .05) v.currentTime = s.vStart;
     v.playbackRate = s.rate || 1; v.play().catch(() => {}); watch(n);
     // YouTube shows a play icon as it starts: stay black until it has faded
@@ -401,6 +422,8 @@
     // if the clip cannot play here, fall back to the freeze-frame photo so the slide still works
     const tok = v._tok;
     setTimeout(() => { if (v._tok === tok && v.currentTime < s.vStart + .2 && !(s.yt && v.readyState)) { v._tok = null; v.pause(); gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); freezeHit(n); } }, s.yt ? 15000 : 6000);
+    // safety net: if the clip stalls mid-play and never reaches its freeze point, freeze where it is so the callouts still come in
+    setTimeout(() => { if (v._tok === tok) { v._tok = null; v.pause(); freezeHit(n); } }, ((s.vFreeze - s.vStart) / (s.rate || 1) + (s.yt ? 12 : 5)) * 1000);
     return true;
   }
   function go(n) {
@@ -416,7 +439,7 @@
       from.classList.remove("on"); gsap.set(from, { clearProps: "zIndex,opacity" });
       gsap.set($(".cam", from), { clearProps: "all" }); gsap.set($(".bgl", from), { clearProps: "transform" });
       if (fv) prime(cur);   // re-cue the clip we just left, in case we come back
-      cur = n; busy = false; hud(); startAmbient(n); restartTimer();
+      cur = n; prime(n + 1); busy = false; hud(); startAmbient(n); restartTimer();
     };
     if (isVid) done();
     else { gsap.fromTo(to, { opacity: 0 }, { opacity: 1, duration: .45, ease: "power1.out", onComplete: done }); gsap.delayedCall(.35, () => enterText(n)); }
@@ -465,6 +488,7 @@
   let loaded = false;
   Promise.all(imgs.map(im => im.complete ? Promise.resolve() : new Promise(r => { im.onload = im.onerror = r; }))).then(() => {
     els.forEach((_, i) => layout(i)); els.forEach(resetText);
+    if (document.fonts) document.fonts.ready.then(() => els.forEach((_, i) => layout(i)));   // re-measure cards once the fonts are in
     cur = Math.max(0, Math.min(SCENES.length - 1, parseInt(location.hash.slice(1)) || 0));
     loaded = true;
     gsap.to("#ready", { opacity: 1, duration: .8 });
@@ -486,7 +510,7 @@
     if (!silent && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
     gsap.killTweensOf("#ready"); gsap.to("#ready", { opacity: 0, duration: .3, onComplete: () => { const r = document.getElementById("ready"); if (r) r.remove(); } });
     const sec = els[cur]; sec.classList.add("on"); gsap.set(sec, { zIndex: 2, opacity: 1 });
-    SCENES.forEach((_, k) => prime(k));
+    prime(cur); prime(cur + 1);   // buffer only what is on screen and next, so clips do not starve each other
     gsap.to("#curtain", { opacity: 0, duration: .6, delay: .3, onComplete: () => { const c = document.getElementById("curtain"); if (c) c.remove(); } });
     gsap.delayedCall(.3, () => { if (!show(cur)) gsap.delayedCall(.4, () => enterText(cur)); hud(); startAmbient(cur); restartTimer(); });
   }
