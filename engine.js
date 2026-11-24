@@ -330,29 +330,39 @@
     b.src = s.streak || s.photo;
   }
 
+  // no transitions between jets: hard cut straight into the next shot (video plays, ramps, freezes)
+  function show(n) {
+    const s = SCENES[n], sec = els[n], cam = $(".cam", sec), bgl = $(".bgl", sec);
+    gsap.set(cam, { scale: 1, x: 0, y: 0, xPercent: 0, yPercent: 0, rotation: 0, opacity: 1 });
+    gsap.set(bgl, { x: 0, y: 0, scale: 1 });
+    if (!s.video) { gsap.set($(".photo", sec), { opacity: 1 }); return false; }
+    const v = $(".vid", sec);
+    gsap.set($(".photo", sec), { opacity: 0 }); gsap.set(v, { opacity: 1 });
+    gsap.set(["#lbt", "#lbb"], { height: 118 });
+    if (Math.abs(v.currentTime - s.vStart) > .05) v.currentTime = s.vStart;
+    v.playbackRate = s.rate || 1; v.play().catch(() => {}); watch(n);
+    // if the clip cannot play here, fall back to the freeze-frame photo so the slide still works
+    const tok = v._tok;
+    setTimeout(() => { if (v._tok === tok && v.currentTime < s.vStart + .2) { v._tok = null; v.pause(); gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); freezeHit(n); } }, 6000);
+    return true;
+  }
   function go(n) {
     if (busy || n === cur || n < 0 || n >= SCENES.length) return;
     busy = true; if (timer) timer.kill(); if (ambient) ambient.kill();
     const from = els[cur], to = els[n], s = SCENES[n];
+    const fv = $(".vid", from); if (fv) { fv._tok = null; fv.pause(); }
+    gsap.killTweensOf(["#lbt", "#lbb"]); gsap.set(["#lbt", "#lbb"], { height: 0 });
     layout(n); resetText(to);
-    const tl = gsap.timeline({ onComplete: () => {
+    to.classList.add("on"); gsap.set(to, { zIndex: 3, opacity: 1 }); gsap.set(from, { zIndex: 2 });
+    const isVid = show(n);
+    const done = () => {
       from.classList.remove("on"); gsap.set(from, { clearProps: "zIndex,opacity" });
       gsap.set($(".cam", from), { clearProps: "all" }); gsap.set($(".bgl", from), { clearProps: "transform" });
-      gsap.set($(".bgl", to), { "--f": "0%" }); gsap.set($(".bgl", from), { "--f": "0%" });
-      if ($(".streak", from)) gsap.set($(".streak", from), { opacity: 0 });
+      if (fv) prime(cur);   // re-cue the clip we just left, in case we come back
       cur = n; busy = false; hud(); startAmbient(n); restartTimer();
-    } });
-    gsap.set($(".cam", from), { scale: 1, xPercent: 0, yPercent: 0 });
-    const T = 1.6, ease = "power3.inOut", at = .2, zoom = !!(s.cut && s.cut.zoom);
-    backdrop(n);
-    // soften both frames' edges during the whip so they melt into the sky wash
-    tl.fromTo($(".bgl", from), { "--f": "0%" }, { "--f": "22%", duration: .45, ease: "power1.out" }, at);
-    tl.fromTo($(".bgl", to), { "--f": "22%" }, { "--f": "0%", duration: .7, ease: "power2.in" }, at + T * .55);
-    depart(cur, s.heading, tl, at, T, ease, zoom);
-    to.classList.add("on"); gsap.set(to, { zIndex: 3 }); gsap.set(from, { zIndex: 2 });
-    const landed = arrive(n, tl, at, T, ease);
-    fx(n, tl, at, T);
-    if (!s.video) { tl.add(() => enterText(n), at + landed + .2); flash(tl, at + T * .5, .5); }
+    };
+    if (isVid) done();
+    else { gsap.fromTo(to, { opacity: 0 }, { opacity: 1, duration: .45, ease: "power1.out", onComplete: done }); gsap.delayedCall(.35, () => enterText(n)); }
   }
 
   /* ---------- HUD / timer / keys ---------- */
@@ -418,14 +428,10 @@
     fit();
     if (!silent && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
     gsap.killTweensOf("#ready"); gsap.to("#ready", { opacity: 0, duration: .3, onComplete: () => { const r = document.getElementById("ready"); if (r) r.remove(); } });
-    backdrop(cur);
-    const sec = els[cur]; sec.classList.add("on"); gsap.set(sec, { zIndex: 2 });
-    const T = 1.6, at = 1.1, tl = gsap.timeline();
-    const landed = arrive(cur, tl, at, T, "expo.out");
-    fx(cur, tl, at, T);
-    tl.to("#curtain", { opacity: 0, duration: .5, onComplete: () => { const c = document.getElementById("curtain"); if (c) c.remove(); } }, at);
-    if (!SCENES[cur].video) tl.add(() => enterText(cur), at + landed + .2);
-    tl.add(() => { hud(); startAmbient(cur); restartTimer(); SCENES.forEach((_, k) => prime(k)); }, at + landed);
+    const sec = els[cur]; sec.classList.add("on"); gsap.set(sec, { zIndex: 2, opacity: 1 });
+    SCENES.forEach((_, k) => prime(k));
+    gsap.to("#curtain", { opacity: 0, duration: .6, delay: .3, onComplete: () => { const c = document.getElementById("curtain"); if (c) c.remove(); } });
+    gsap.delayedCall(.3, () => { if (!show(cur)) gsap.delayedCall(.4, () => enterText(cur)); hud(); startAmbient(cur); restartTimer(); });
   }
   addEventListener("resize", () => els.forEach((_, i) => layout(i)));
 })();
