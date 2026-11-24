@@ -1,0 +1,88 @@
+/* Scene data. Callout points are in a 960x540 design frame of each photo (same framing
+   as the stage), so they stay glued to the aircraft. cut = the jet cut out of its own photo:
+   x/y/w/h are fractions of the photo, nozzles are fractions of the cutout, heading is the
+   direction the nose points (0 = up, clockwise). */
+window.SCENES = [
+  { id: "title", photo: "img/t_cand1.jpg", streak: "img/streak_title.jpg", fx: .55, fy: .5, over: 1.05, heading: 90,
+    shade: "linear-gradient(90deg, rgba(4,6,10,.78) 0%, rgba(4,6,10,.3) 40%, rgba(4,6,10,0) 62%)",
+    head: [["FIGHTER", "JETS"], "top"], sub: "SEVEN AIRCRAFT  ·  TWENTY SECONDS EACH",
+    credit: "F-22s of the 43rd FS and a T-38 · U.S. Air Force photo by MSgt J. Wilcox (public domain)",
+    notes: "Fighter jets. Seven aircraft: the Super Hornet, two Sukhois, the F-22, and three stealth pioneers: the Ho 229, the B-2 and the F-117. Twenty seconds each." },
+
+  { id: "fa18", photo: "img/fa18.jpg", streak: "img/streak_fa18.jpg", fx: .5, fy: .32, over: 1, heading: 45,
+    cut: { src: "img/cut_fa18.png", x: .15990, y: .13997, w: .7, h: .81966, nozzles: [[.085, .925], [.13, .905]], nozzle: .045 },
+    model: "F/A-18F Super Hornet", maker: "Boeing · US Navy", head: [["LAUNCHED", "FROM A SHIP."], "bottom"],
+    calls: [ [760, 92, 820, 160, "RADAR", "In the nose"], [500, 205, 400, 110, "TWO SEATS", "Pilot + weapons officer", 1],
+             [600, 245, 700, 320, "VAPOR CONE", "A hard turn pulls water from the air"], [250, 345, 175, 240, "TWIN TAILS", "Control at high angles", 1] ],
+    specs: [["First flight", "1995"], ["Operational", "2001"], ["Weapon stations", "11"]],
+    credit: "F/A-18F high-g pass · U.S. Navy photo by PH2 Daniel J. McLain (public domain)",
+    notes: "The Super Hornet lives on aircraft carriers: a catapult throws it off the deck and a hook catches a wire to land. This F model has two seats, a pilot and a weapons officer. That white cloud is a vapor cone: in a hard turn the air pressure drops and moisture condenses. First flight 1995, operational 2001." },
+
+  { id: "su34", photo: "img/c_su34.jpg", streak: "img/streak_su34.jpg", fx: .5, fy: .5, over: 1, heading: 302,
+    cut: { src: "img/cut_csu34.png", x: .12969, y: .13935, w: .75, h: .73988, nozzles: [[.815, .69], [.865, .665]], nozzle: .04 },
+    model: "Sukhoi Su-34 Fullback", maker: "Russia · Fighter-bomber", head: [["SIDE BY", "SIDE."], "bottom"],
+    calls: [ [317, 104, 430, 60, "SIDE-BY-SIDE COCKPIT", "Two crew sit next to each other"], [180, 51, 95, 215, "FLAT 'DUCKBILL' NOSE", "Nicknamed the Platypus"],
+             [547, 232, 650, 170, "12 HARDPOINTS", "Bombs and missiles"], [931, 383, 905, 285, "TAIL STING", "Rear-facing warning radar", 1] ],
+    specs: [["First flight", "1990"], ["In service", "2014"], ["Crew", "2"]],
+    credit: "Su-34 at MAKS 2013 · Photo: Doomych (public domain)",
+    notes: "The Su-34 is Russia's long-range strike jet, a bomber built from the Su-27 fighter. Its two crew sit side by side in an armoured cockpit with room to stand up on long missions. Pilots call it the Platypus because of its flat nose. First flight 1990, in service 2014." },
+
+  { id: "su57", photo: "img/su57.jpg", streak: "img/streak_su57.jpg", fx: .5, fy: .5, over: 1, heading: 83,
+    cut: { src: "img/cut_su57.png", x: .4599, y: .2, w: .4, h: .47969, nozzles: [[.09, .545], [.12, .625]], nozzle: .06 },
+    model: "Sukhoi Su-57 Felon", maker: "Russia · 5th generation", head: [["NEVER DOGFIGHT", "A SUKHOI."], "split"],
+    calls: [ [300, 220, 205, 300, "VAPOR SHELL", "Close to the speed of sound", 1], [570, 212, 655, 185, "STEALTH SHAPING", "Edges lined up to scatter radar"],
+             [506, 242, 560, 390, "THRUST VECTORING", "Engine nozzles that steer"], [775, 265, 850, 330, "AESA RADAR", "In the nose", 1] ],
+    specs: [["First flight", "2010"], ["Delivered", "2020"], ["Engines", "2"]],
+    credit: "Su-57 (T-50 prototype) · Photo: Rulexip, CC BY-SA 3.0",
+    notes: "The Su-57 is Russia's stealth fighter, NATO name Felon. It first flew in January 2010; the first production jet was delivered in December 2020. Its engine nozzles can steer the thrust, so it turns extremely hard. That rainbow cloud is a vapor shell that forms close to the speed of sound." },
+
+  { id: "f22", photo: "img/c_f22.jpg", streak: "img/streak_f22.jpg", fx: .5, fy: .5, over: 1, heading: 270,
+    cut: { src: "img/cut_cf22.png", x: .00469, y: .26938, w: .98958, h: .33986, nozzles: [[.84, .8]], nozzle: .035 },
+    model: "Lockheed Martin F-22 Raptor", maker: "USA · 5th generation", head: [["FIRST OF THE", "FIFTH GEN."], "top"], specsTop: true,
+    calls: [ [259, 245, 170, 365, "STEALTH CANOPY", "Coated so radar can't see in"], [374, 302, 470, 395, "CARET INTAKES", "Hide the engine fans from radar"],
+             [720, 219, 905, 125, "CANTED TWIN TAILS", "Angled to scatter radar", 1], [893, 302, 930, 400, "VECTORING NOZZLES", "Tilt up and down to turn harder", 1] ],
+    specs: [["In service", "2005"], ["Speed", "Mach 2"], ["Crew", "1"]],
+    credit: "F-22 alongside a KC-135 · U.S. Air Force photo by Jacob Cabanero (public domain)",
+    notes: "The F-22 Raptor was the first fifth-generation fighter in service, declared operational in December 2005. The canopy is coated so radar can't see the cockpit, the intakes hide the engine fans, and the nozzles tilt up and down to push the nose around. It can fly faster than sound without afterburner, called supercruise." },
+
+  { id: "ho229", photo: "img/ho229.jpg", streak: "img/streak_ho229.jpg", fx: 0, fy: .2, over: 1.75, heading: 90,
+    shade: "linear-gradient(180deg, rgba(5,7,10,.75) 0%, rgba(5,7,10,0) 38%, rgba(5,7,10,0) 62%, rgba(5,7,10,.75) 100%)",
+    model: "Horten Ho 229 V3", maker: "Germany · 1945", head: [["A FLYING WING", "IN 1945."], "top"],
+    calls: [ [520, 240, 640, 330, "TWO JET ENGINES", "Buried inside the wing"], [160, 380, 240, 440, "NO TAIL AT ALL", "The whole plane is one wing"],
+             [150, 300, 90, 250, "WOOD + STEEL", "Plywood wings, steel frame", 1] ],
+    specs: [["First jet flight", "1945"], ["Built by", "Horten bros."], ["Today", "Smithsonian"]],
+    credit: "Ho 229 V3 at the Smithsonian · Photo: HawkeyeUK, CC BY-SA 2.0",
+    notes: "The Horten Ho 229 was a German jet-powered flying wing. A prototype flew under jet power in February 1945 and crashed weeks later. US troops captured an unfinished one in 1945; it is in the Smithsonian today. People often say the B-2 copied it, but Northrop had flown its own flying wings since 1940, so historians call that a myth." },
+
+  { id: "b2", photo: "img/b2.jpg", streak: "img/streak_b2.jpg", fx: .5, fy: .5, over: 1, heading: 180,
+    cut: { src: "img/cut_b2.png", x: .03958, y: .27969, w: .93958, h: .31953, zoom: true, dur: 2.0 },
+    model: "Northrop B-2 Spirit", maker: "USA · Stealth bomber", head: [["NO TAIL.", "NO TRACE."], "split"],
+    calls: [ [440, 208, 500, 130, "2 PILOTS", "Missions can last over 30 hours"], [600, 250, 680, 330, "SAWTOOTH EDGES", "Zig-zags hide it from radar"],
+             [78, 284, 130, 360, "52 M WINGSPAN", "Wider than a Boeing 737 is long"] ],
+    specs: [["First flight", "1989"], ["Built", "21"], ["Crew", "2"]],
+    credit: "B-2 low approach over RAF Fairford · U.S. Air Force photo by SrA Eugene Oliver (public domain)",
+    notes: "The B-2 Spirit is a stealth bomber shaped as one huge wing, 52 metres across, with no tail. Its edges are cut in zig-zags so radar bounces away. Only 21 were built, and it first flew in July 1989. Two pilots fly missions that can last more than a day, refuelling in the air. No afterburners: it is built to be quiet and hidden." },
+
+  { id: "f117", photo: "img/c_f117.jpg", streak: "img/streak_f117.jpg", fx: .5, fy: .5, over: 1, heading: 92,
+    shade: "linear-gradient(0deg, rgba(5,7,10,.8) 0%, rgba(5,7,10,0) 32%)",
+    cut: { src: "img/cut_cf117.png", x: .03958, y: .15975, w: .92969, h: .54973, dur: 2.0 },
+    model: "Lockheed F-117 Nighthawk", maker: "USA · 1983", head: [["THE FIRST STEALTH JET."], "bottom"], headSize: 92, specsTop: true,
+    calls: [ [518, 168, 380, 95, "STARS AND STRIPES", "Flag paint for its final missions", 1], [467, 347, 400, 450, "FLAT FACETS", "Bounce radar away like a mirror", 1],
+             [144, 334, 110, 255, "V-TAIL", "Two tails angled outward"], [879, 353, 905, 440, "BLACK FINISH", "Radar-absorbing, built for night", 1] ],
+    specs: [["First flight", "1981"], ["Revealed", "1988"], ["Retired", "2008"]],
+    credit: "F-117s on one of their last missions · U.S. Air Force photo by SMSgt Kim Frey (public domain)",
+    notes: "The F-117 Nighthawk was the first operational aircraft designed around stealth. It is built from flat panels, facets, that reflect radar away like a mirror. This one wears a flag scheme for its final missions. It first flew in 1981, stayed secret until 1988, and officially retired in 2008. No afterburners: hot exhaust would give it away." },
+
+  { id: "timeline", photo: "img/sky.jpg", streak: "img/streak_sky.jpg", fx: 0, fy: .35, over: 1.15, heading: 90,
+    shade: "linear-gradient(180deg, rgba(5,8,12,.6), rgba(5,8,12,.4) 50%, rgba(5,8,12,.65))",
+    head: [["80 YEARS OF", "HIDING FROM RADAR"], "top"], headSize: 110,
+    timeline: [["1945", "Ho 229", "Jet flying wing"], ["1981", "F-117", "First stealth jet flies"], ["1989", "B-2", "Stealth flying wing"], ["2005", "F-22", "Stealth fighter in service"], ["2010", "Su-57", "Russia's stealth jet flies"]],
+    credit: "View from an airliner window · Photo: Famartin, CC BY-SA 4.0",
+    notes: "Put them on one line: the Ho 229 flying wing in 1945, the F-117 flying in 1981, the B-2 in 1989, the F-22 in service in 2005 and the Su-57 flying in 2010. Each one made it harder for radar to see what's coming." },
+
+  { id: "end", photo: "img/title.jpg", streak: "img/streak_end.jpg", fx: .3, fy: .6, over: 1.3, heading: 315,
+    shade: "linear-gradient(0deg, rgba(10,7,3,.75) 0%, rgba(10,7,3,0) 55%)",
+    head: [["WHICH ONE", "WOULD YOU FLY?"], "bottom"], end: true,
+    credit: "F-22 Raptor at twilight · U.S. Air Force photo by 2nd Lt. Samuel Eckholm (public domain)",
+    notes: "Carrier jet, flying platypus, rainbow Sukhoi, the Raptor and three stealth pioneers. Which one would you fly? Thanks for listening." }
+];
