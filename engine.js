@@ -36,11 +36,12 @@
       <div class="cam">
         <div class="bgl">
           <img class="photo" src="${s.photo}" alt="${s.model || ""}">
-          ${s.video ? `<video class="vid" src="${s.video}" muted playsinline preload="metadata"></video>` : ""}
+          ${s.video ? `<video class="vid" src="${s.video}" muted playsinline preload="metadata"></video>` : s.yt ? `<div class="vid yt"></div>` : ""}
           ${s.streak ? `<img class="streak" src="${s.streak}" alt="">` : ""}
           <div class="shade" style="background:${s.shade || "none"}"></div>
         </div>
         ${s.cut ? `<div class="jet"><div class="flames"></div><img src="${s.cut.src}" alt=""></div>` : ""}
+        ${s.yt ? `<div class="pip"><i></i></div>` : ""}
         <svg class="calls" width="${SW}" height="${SH}" viewBox="0 0 ${SW} ${SH}"></svg>
         <div class="labs"></div>
       </div>
@@ -62,6 +63,40 @@
     t.innerHTML = html;
     return sec;
   });
+
+  /* ---------- YouTube clips (official game trailers), wrapped so the engine drives them like a <video> ---------- */
+  let ytLoad = null;
+  function loadYT() {
+    if (!ytLoad) ytLoad = new Promise(r => { window.onYouTubeIframeAPIReady = r; const t = document.createElement("script"); t.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(t); });
+    return ytLoad;
+  }
+  function ytVid(box, s) {
+    const host = document.createElement("div"); box.appendChild(host);
+    let p = null, ok = false, want = null, rate = 1, t = s.vStart, st = -1, lastR = -1, lastAt = 0;
+    loadYT().then(() => {
+      p = new YT.Player(host, { videoId: s.yt, width: 1920, height: 1080,
+        playerVars: { autoplay: 0, mute: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, playsinline: 1, rel: 0, start: Math.floor(s.vStart), origin: location.origin },
+        events: { onReady: () => { ok = true; p.mute(); p.seekTo(t, true); if (want) want(); else p.pauseVideo(); },
+                  onStateChange: e => { st = e.data; } } });
+    });
+    Object.defineProperties(box, {
+      // the player only reports its time every few frames: extrapolate between reports so the freeze lands on time
+      currentTime: { get: () => {
+        if (!ok) return t;
+        const r = p.getCurrentTime(), now = performance.now();
+        if (r !== lastR) { lastR = r; lastAt = now; }
+        return st === 1 ? r + Math.min(.5, (now - lastAt) / 1000 * rate) : r;
+      }, set: x => { t = x; lastR = -1; if (ok) p.seekTo(x, true); } },
+      paused: { get: () => st !== 1 && st !== 3 },
+      ended: { get: () => st === 0 },
+      readyState: { get: () => ok ? 4 : 0 },
+      playbackRate: { get: () => rate, set: x => { if (Math.abs(x - rate) < .05) return; rate = x; if (ok) p.setPlaybackRate(x); } },
+      preload: { get: () => "auto", set() {} }
+    });
+    box.play = () => { const run = () => { p.setPlaybackRate(rate); p.playVideo(); }; if (ok) run(); else want = run; return Promise.resolve(); };
+    box.pause = () => { want = null; if (ok) p.pauseVideo(); };
+  }
+  SCENES.forEach((s, i) => { if (s.yt) ytVid($(".vid", els[i]), s); });
 
   function layout(i) {
     const s = SCENES[i], sec = els[i], photo = $(".photo", sec);
@@ -93,15 +128,19 @@
       let dir = c[6] ? -1 : 1;
       if (dir > 0 && lx + estW > SW - 40) dir = -1;
       if (dir < 0 && lx - estW < 40) dir = 1;
-      const run = Math.max(330, estW), ex = lx + dir * run, b = 22, g = 9;
-      const br = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) =>
-        `M${px + sx * b} ${py + sy * (b - g)} L${px + sx * b} ${py + sy * b} L${px + sx * (b - g)} ${py + sy * b}`).join(" ");
+      const run = Math.max(330, estW), ex = lx + dir * run, b = 26, R = b * 1.55;
+      // Ace Combat-style lock-on: a spinning diamond closes in, snaps to a lock box, "LOCK" blinks
       svg.insertAdjacentHTML("beforeend", `<g class="co">
-        <circle class="pulse" cx="${px}" cy="${py}" r="10"/><path class="ret" d="${br}"/><circle class="dot" cx="${px}" cy="${py}" r="5"/>
+        <circle class="pulse" cx="${px}" cy="${py}" r="10"/>
+        <polygon class="dia" points="${px},${py - R} ${px + R},${py} ${px},${py + R} ${px - R},${py}"/>
+        <rect class="ret" x="${px - b}" y="${py - b}" width="${2 * b}" height="${2 * b}"/>
+        <text class="lk" x="${px}" y="${py - b - 9}" text-anchor="middle">LOCK</text>
+        <circle class="dot" cx="${px}" cy="${py}" r="4"/>
         <polyline class="ld" points="${px},${py} ${lx},${ly} ${ex},${ly}"/><line class="tick" x1="${ex}" y1="${ly - 9}" x2="${ex}" y2="${ly + 9}"/></g>`);
+      // Watch Dogs-style profiler card
       const lab = document.createElement("div"); lab.className = "lab" + (dir < 0 ? " r" : "");
-      lab.innerHTML = `<div class="plate"><b><em>${String(k + 1).padStart(2, "0")}</em><span class="ty" data-t="${c[4]}"></span></b><span class="ty d" data-t="${c[5]}"></span><i class="scan"></i></div>`;
-      lab.style.top = (ly - 96) + "px"; lab.style.left = lx + "px";
+      lab.innerHTML = `<div class="plate"><div class="hdr"><em>${String(k + 1).padStart(2, "0")}</em>PROFILER · TGT ${String(k + 1).padStart(2, "0")}</div><b><span class="ty" data-t="${c[4]}"></span></b><span class="ty d" data-t="${c[5]}"></span><i class="scan"></i></div>`;
+      lab.style.top = (ly - 122) + "px"; lab.style.left = lx + "px";
       labs.appendChild(lab);
     });
     return true;
@@ -119,13 +158,21 @@
       const pl = $(".ld", g), pts = [...pl.points]; let len = 0;
       for (let j = 1; j < pts.length; j++) len += Math.hypot(pts[j].x - pts[j - 1].x, pts[j].y - pts[j - 1].y);
       tl.set(g, { opacity: 1 }, at);
-      tl.fromTo($(".ret", g), { opacity: 0, scale: 3, rotation: 90, svgOrigin: `${cx} ${cy}` }, { opacity: 1, scale: 1, rotation: 0, svgOrigin: `${cx} ${cy}`, duration: .5, ease: "power4.out" }, at);
-      tl.to($(".ret", g), { keyframes: [{ opacity: .15 }, { opacity: 1 }, { opacity: .15 }, { opacity: 1 }], duration: .28 }, at + .5);
-      tl.fromTo([dot, $(".pulse", g)], { opacity: 0 }, { opacity: 1, duration: .1 }, at + .25);
+      const dia = $(".dia", g), ret = $(".ret", g), lk = $(".lk", g), so = `${cx} ${cy}`;
+      tl.fromTo(dia, { opacity: 0, scale: 3.4, rotation: -200, svgOrigin: so }, { opacity: 1, scale: 1, rotation: 0, svgOrigin: so, duration: .5, ease: "power3.out" }, at);
+      tl.to(dia, { scale: .62, opacity: 0, svgOrigin: so, duration: .14, ease: "power2.in" }, at + .5);
+      tl.fromTo(ret, { opacity: 0, scale: 1.5, svgOrigin: so, stroke: "#7dffa0" }, { opacity: 1, scale: 1, svgOrigin: so, duration: .12, ease: "power4.out" }, at + .56);
+      tl.to(ret, { keyframes: [{ opacity: .2 }, { opacity: 1 }, { opacity: .2 }, { opacity: 1 }], duration: .24 }, at + .68);
+      tl.to(ret, { stroke: "#ff3d3d", duration: .01 }, at + .9);
+      tl.fromTo(lk, { opacity: 0 }, { keyframes: [{ opacity: 1 }, { opacity: 0 }, { opacity: 1 }, { opacity: 0 }, { opacity: 1 }], duration: .4 }, at + .9);
+      tl.fromTo([dot, $(".pulse", g)], { opacity: 0 }, { opacity: 1, duration: .1 }, at + .56);
       tl.fromTo(pl, { strokeDasharray: len, strokeDashoffset: len }, { strokeDashoffset: 0, duration: .5, ease: "power2.inOut" }, at + .35);
       tl.fromTo($(".tick", g), { opacity: 0 }, { opacity: 1, duration: .1 }, at + .82);
       const lab = $$(".lab", sec)[k]; if (!lab) return;
-      tl.fromTo(lab, { opacity: 0, clipPath: "inset(0 100% 0 0)" }, { opacity: 1, clipPath: "inset(0 0% 0 0)", duration: .35, ease: "power2.out" }, at + .7);
+      // profiler card glitches in (RGB split + slice jitter), then the text types out
+      const plate = $(".plate", lab);
+      tl.set(lab, { opacity: 1 }, at + .7);
+      tl.add(() => { plate.classList.remove("gl"); void plate.offsetWidth; plate.classList.add("gl"); }, at + .7);
       tl.fromTo($(".scan", lab), { xPercent: -100, opacity: 1 }, { xPercent: 420, opacity: 0, duration: .6, ease: "power1.in" }, at + .75);
       $$(".ty", lab).forEach((el, j) => {
         const full = el.dataset.t, o = { n: 0 }; el.textContent = "";
@@ -202,8 +249,8 @@
   }
   /* ---------- edit-style footage: flash cut, zoom punch, RGB split, letterbox, speed ramp, freeze ---------- */
   // pre-load the start of the next clip while the current scene is on screen
-  function prime(n) { const s = SCENES[n], v = s && s.video && $(".vid", els[n]); if (v && v.paused) { v.preload = "auto"; v.currentTime = s.vStart; } }
-  function flash(tl, at, k = .9) { tl.fromTo("#flash", { opacity: k }, { opacity: 0, duration: .35, ease: "power2.out" }, at); }
+  function prime(n) { const s = SCENES[n], v = s && (s.video || s.yt) && $(".vid", els[n]); if (v && v.paused) { v.preload = "auto"; v.currentTime = s.vStart; } }
+  function flash(tl, at, k = .9, d = .35) { tl.fromTo("#flash", { opacity: k }, { opacity: 0, duration: d, ease: "power2.out" }, at); }
   function rgb(tl, el, at, dur) { /* off: filters on 4K video cause stutter */ }
   function rgbOff(tl, el, at, dur) {
   }
@@ -238,7 +285,8 @@
   }
   function freezeHit(n) {
     const sec = els[n], bgl = $(".bgl", sec), v = $(".vid", sec), tl = gsap.timeline();
-    flash(tl, 0, .55);
+    // YouTube flashes a small pause icon when it stops: a full white flash covers it
+    if (SCENES[n].yt) { flash(tl, 0, 1, .75); tl.set($(".pip", sec), { opacity: 1 }, 0); } else flash(tl, 0, .55);
     tl.fromTo(bgl, { scale: 1.12 }, { scale: 1, duration: .55, ease: "power4.out" }, 0);
 
     letterbox(tl, .3, false);
@@ -335,15 +383,21 @@
     const s = SCENES[n], sec = els[n], cam = $(".cam", sec), bgl = $(".bgl", sec);
     gsap.set(cam, { scale: 1, x: 0, y: 0, xPercent: 0, yPercent: 0, rotation: 0, opacity: 1 });
     gsap.set(bgl, { x: 0, y: 0, scale: 1 });
-    if (!s.video) { gsap.set($(".photo", sec), { opacity: 1 }); return false; }
+    if (!s.video && !s.yt) { gsap.set($(".photo", sec), { opacity: 1 }); return false; }
     const v = $(".vid", sec);
     gsap.set($(".photo", sec), { opacity: 0 }); gsap.set(v, { opacity: 1 });
-    gsap.set(["#lbt", "#lbb"], { height: 118 });
+    gsap.set(["#lbt", "#lbb"], { height: 118 }); if (s.yt) gsap.set($(".pip", sec), { opacity: 0 });
     if (Math.abs(v.currentTime - s.vStart) > .05) v.currentTime = s.vStart;
     v.playbackRate = s.rate || 1; v.play().catch(() => {}); watch(n);
+    // YouTube shows a play icon as it starts: stay black until it has faded
+    if (s.yt) {
+      gsap.set(v, { opacity: 0 }); const tk = v._tok;
+      const reveal = () => { if (v._tok !== tk) return; if (v.paused) return setTimeout(reveal, 100); gsap.to(v, { opacity: 1, duration: .08, delay: .55 }); };
+      reveal();
+    }
     // if the clip cannot play here, fall back to the freeze-frame photo so the slide still works
     const tok = v._tok;
-    setTimeout(() => { if (v._tok === tok && v.currentTime < s.vStart + .2) { v._tok = null; v.pause(); gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); freezeHit(n); } }, 6000);
+    setTimeout(() => { if (v._tok === tok && v.currentTime < s.vStart + .2 && !(s.yt && v.readyState)) { v._tok = null; v.pause(); gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); freezeHit(n); } }, s.yt ? 15000 : 6000);
     return true;
   }
   function go(n) {
