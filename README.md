@@ -39,3 +39,10 @@ Start at a given scene with `#N` in the URL (for example `#4` for the F-22).
 Jet cutouts, motion-blur streaks and cloud layers are derived from these photos; derived versions of CC BY-SA photos are shared under the same licences.
 
 Fonts: Archivo Black, Barlow Condensed, Inter and Share Tech Mono (Google Fonts). Animation: GSAP. Sound: synthesized live with the Web Audio API.
+
+## Video credits
+
+| Scene | Footage | Licence |
+|---|---|---|
+| F-22 | [F-22 Afterburner Launches during PF 22-4 (4K Slowmo)](https://www.dvidshub.net/video/838229), U.S. Air Force, streamed from DVIDS | Public domain |
+| F/A-18 Super Hornet | [Navy Super Hornets conduct flight operations during Northern Edge 2021](https://www.dvidshub.net/video/793950), U.S. Navy via DVIDS | Public domain |

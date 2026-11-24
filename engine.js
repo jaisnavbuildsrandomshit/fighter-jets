@@ -36,6 +36,7 @@
       <div class="cam">
         <div class="bgl">
           <img class="photo" src="${s.photo}" alt="${s.model || ""}">
+          ${s.video ? `<video class="vid" src="${s.video}" muted playsinline preload="metadata"></video>` : ""}
           ${s.streak ? `<img class="streak" src="${s.streak}" alt="">` : ""}
           <div class="shade" style="background:${s.shade || "none"}"></div>
         </div>
@@ -68,6 +69,7 @@
     const m = mapper(s, iw, ih);
     const box = { width: m.f.pw + "px", height: m.f.ph + "px", left: m.f.l + "px", top: m.f.t + "px" };
     Object.assign(photo.style, box);
+    const vid = $(".vid", sec); if (vid) Object.assign(vid.style, box);
     if (s.streak) Object.assign($(".streak", sec).style, box);
     if (s.cut) {
       const [x0, y0] = m.frac(s.cut.x, s.cut.y), [x1, y1] = m.frac(s.cut.x + s.cut.w, s.cut.y + s.cut.h);
@@ -166,6 +168,7 @@
   const span = (vx, vy) => Math.abs(vx) * SW + Math.abs(vy) * SH;
   // the new shot: background streaks in along the jet's heading and settles; the jet stays locked
   function arrive(n, tl, at, T = 1.7, ease = "expo.out") {
+    if (SCENES[n].video) return arriveVideo(n, tl, at, T);
     const s = SCENES[n], sec = els[n], cam = $(".cam", sec), bgl = $(".bgl", sec);
     const photo = $(".photo", sec), streak = $(".streak", sec), [vx, vy] = vec(s.heading ?? 90), D = span(vx, vy);
     gsap.set(cam, { scale: 1, xPercent: 0, yPercent: 0, x: 0, y: 0, rotation: 0 });
@@ -197,9 +200,55 @@
     shake(tl, at + .05, 9, 1.1);
     return T + .25;
   }
+  /* ---------- edit-style footage: flash cut, zoom punch, RGB split, letterbox, speed ramp, freeze ---------- */
+  // pre-load the start of the next clip while the current scene is on screen
+  function prime(n) { const s = SCENES[n], v = s && s.video && $(".vid", els[n]); if (v && v.paused) { v.preload = "auto"; v.currentTime = s.vStart; } }
+  function flash(tl, at, k = .9) { tl.fromTo("#flash", { opacity: k }, { opacity: 0, duration: .35, ease: "power2.out" }, at); }
+  function rgb(tl, el, at, dur) {
+    tl.fromTo(el, { filter: "contrast(1.08) saturate(1.1) drop-shadow(16px 0 0 rgba(255,0,60,.55)) drop-shadow(-16px 0 0 rgba(0,200,255,.55))" },
+      { filter: "contrast(1.08) saturate(1.1) drop-shadow(0px 0 0 rgba(255,0,60,0)) drop-shadow(0px 0 0 rgba(0,200,255,0))", duration: dur, ease: "power2.out" }, at);
+  }
+  function letterbox(tl, at, on) { tl.to(["#lbt", "#lbb"], { height: on ? 118 : 0, duration: on ? .22 : .6, ease: on ? "power4.out" : "power3.inOut" }, at); }
+  function arriveVideo(n, tl, at, T) {
+    const s = SCENES[n], sec = els[n], v = $(".vid", sec), bgl = $(".bgl", sec), cam = $(".cam", sec);
+    gsap.set(cam, { scale: 1, x: 0, y: 0, xPercent: 0, yPercent: 0, rotation: 0 });
+    gsap.set(sec, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 0 }); gsap.set(v, { opacity: 1 });
+    const cut = at + .12;   // hard cut on the flash, before the old shot has left
+    tl.add(() => { v.currentTime = s.vStart; v.playbackRate = s.rate || 1.5; v.play().catch(() => {}); watch(n); }, cut - .08);
+    tl.set(sec, { opacity: 1 }, cut);
+    flash(tl, cut);
+    tl.fromTo(bgl, { scale: 1.4, x: 0, y: 0 }, { scale: 1.05, duration: .7, ease: "expo.out" }, cut);
+    rgb(tl, v, cut, .4);
+    letterbox(tl, cut, true);
+    shake(tl, cut, 16, .55);
+    return T;
+  }
+  // speed ramp: footage runs fast, then eases into slow motion and slams to a freeze
+  function watch(n) {
+    const s = SCENES[n], v = $(".vid", els[n]), tok = {}; v._tok = tok;
+    const tick = () => {
+      if (v._tok !== tok) return;
+      const left = s.vFreeze - v.currentTime;
+      if (left <= (s.slow || 1.0)) v.playbackRate = Math.max(.22, .22 + left * .7);
+      if (left <= 0 || v.ended) { v.pause(); freezeHit(n); return; }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+  function freezeHit(n) {
+    const sec = els[n], bgl = $(".bgl", sec), v = $(".vid", sec), tl = gsap.timeline();
+    flash(tl, 0, .55);
+    tl.fromTo(bgl, { scale: 1.12 }, { scale: 1, duration: .55, ease: "power4.out" }, 0);
+    tl.fromTo(v, { filter: "contrast(1.35) saturate(0) brightness(1.35)" }, { filter: "contrast(1.08) saturate(1.1) brightness(1)", duration: .7, ease: "power2.out" }, 0);
+    letterbox(tl, .3, false);
+    shake(tl, 0, 11, .35);
+    tl.add(() => enterText(n), .45);
+  }
+
   // the old shot: camera whips away toward the next jet, background smears
   function depart(i, nextHeading, tl, at, T, ease, zoom) {
     const s = SCENES[i], sec = els[i], [vx, vy] = vec(nextHeading ?? 90), D = span(vx, vy);
+    const vid = $(".vid", sec); if (vid) { vid._tok = null; tl.add(() => vid.pause(), at + T); }
     tl.to($(".text", sec), { opacity: 0, duration: .25 }, 0);
     tl.to($$(".labs, svg.calls", sec), { opacity: 0, duration: .2 }, 0);
     const streak = $(".streak", sec);
@@ -290,7 +339,7 @@
       gsap.set($(".cam", from), { clearProps: "all" }); gsap.set($(".bgl", from), { clearProps: "transform" });
       gsap.set($(".bgl", to), { "--f": "0%" }); gsap.set($(".bgl", from), { "--f": "0%" });
       if ($(".streak", from)) gsap.set($(".streak", from), { opacity: 0 });
-      cur = n; busy = false; hud(); startAmbient(n); restartTimer();
+      cur = n; busy = false; hud(); startAmbient(n); restartTimer(); prime(n + 1);
     } });
     gsap.set($(".cam", from), { scale: 1, xPercent: 0, yPercent: 0 });
     const T = 1.6, ease = "power3.inOut", at = .2, zoom = !!(s.cut && s.cut.zoom);
@@ -302,7 +351,7 @@
     to.classList.add("on"); gsap.set(to, { zIndex: 3 }); gsap.set(from, { zIndex: 2 });
     const landed = arrive(n, tl, at, T, ease);
     fx(n, tl, at, T);
-    tl.add(() => enterText(n), at + landed + .2);
+    if (!s.video) { tl.add(() => enterText(n), at + landed + .2); flash(tl, at + T * .5, .5); }
   }
 
   /* ---------- HUD / timer / keys ---------- */
@@ -374,8 +423,8 @@
     const landed = arrive(cur, tl, at, T, "expo.out");
     fx(cur, tl, at, T);
     tl.to("#curtain", { opacity: 0, duration: .5, onComplete: () => { const c = document.getElementById("curtain"); if (c) c.remove(); } }, at);
-    tl.add(() => enterText(cur), at + landed + .2);
-    tl.add(() => { hud(); startAmbient(cur); restartTimer(); }, at + landed);
+    if (!SCENES[cur].video) tl.add(() => enterText(cur), at + landed + .2);
+    tl.add(() => { hud(); startAmbient(cur); restartTimer(); prime(cur + 1); }, at + landed);
   }
   addEventListener("resize", () => els.forEach((_, i) => layout(i)));
 })();
