@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fighter Jets</title>
+<meta name="description" content="Seven aircraft, twenty seconds each: a fly-through presentation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow+Condensed:wght@500;600;700&family=Inter:ital,wght@0,400;0,600;1,600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+  :root { --ink: #f4f6fa; --amber: #f5a623; }
+  html, body { margin: 0; height: 100%; background: #05070a; overflow: hidden; color: var(--ink);
+    font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  #world { position: fixed; inset: 0; overflow: hidden; background: #05070a; }
+
+  .scene { position: absolute; inset: 0; overflow: hidden; visibility: hidden; }
+  .scene.on { visibility: visible; }
+  .cam, .par { position: absolute; inset: 0; will-change: transform; }
+  .photo { position: absolute; max-width: none; user-select: none; -webkit-user-drag: none;
+    filter: contrast(1.07) saturate(1.08); }
+  .shade { position: absolute; inset: -10%; pointer-events: none; }
+  svg.calls { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+  svg.calls g.co { opacity: 0; }
+  .lab { opacity: 0; }
+  svg.calls polyline { fill: none; stroke-width: 1.15; stroke-linejoin: miter; }
+  svg.calls .ret { fill: none; stroke-width: 1.4; }
+  svg.calls .pulse { fill: none; stroke-width: 1; transform-box: fill-box; transform-origin: center; animation: pulse 1.8s ease-out infinite; }
+  @keyframes pulse { 0% { transform: scale(.6); opacity: .9 } 100% { transform: scale(3.2); opacity: 0 } }
+  .lab { position: absolute; line-height: 1.2; white-space: nowrap; pointer-events: none; font-family: "Share Tech Mono", monospace; }
+  .lab b { display: block; font-family: "Barlow Condensed", sans-serif; font-weight: 700; letter-spacing: .06em; }
+  .lab b em { font-style: normal; font-family: "Share Tech Mono", monospace; font-weight: 400; color: var(--amber); margin-right: .5em; letter-spacing: 0; }
+  .lab span { display: block; opacity: .92; letter-spacing: .02em; }
+  .lab .meta { opacity: .6; letter-spacing: .12em; }
+
+  .text { position: absolute; inset: 0; pointer-events: none; }
+  .border { position: absolute; inset: 1.6vh; border: 1px solid currentColor; opacity: .55; }
+  .model { position: absolute; left: 3vh; top: 2.6vh; right: 3vh; display: flex; align-items: center; gap: 1.2vh; }
+  .model i { font-weight: 600; font-size: 2.2vh; white-space: nowrap; }
+  .model .rule { flex: 1; height: 1px; background: currentColor; opacity: .8; transform-origin: left; }
+  .model small { font-size: 1.25vh; letter-spacing: .25em; text-transform: uppercase; white-space: nowrap; }
+  .head { position: absolute; left: 5.2vw; font-family: "Archivo Black", sans-serif; font-size: min(7.4vw, 12.6vh);
+    line-height: .9; letter-spacing: -.01em; text-transform: uppercase; color: #fff;
+    text-shadow: 0 .4vh 3vh rgba(0,0,0,.35); }
+  .head .ln { display: block; overflow: hidden; padding-bottom: .06em; }
+  .head .ln > span { display: inline-block; }
+  .specs { position: absolute; right: 4vw; bottom: 6.5vh; display: flex; gap: 3.2vw; }
+  .spec small { display: block; font-size: 1.15vh; letter-spacing: .28em; text-transform: uppercase; opacity: .85; }
+  .spec b { display: block; font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 3.6vh; letter-spacing: .02em; }
+  .credit { position: absolute; right: 3vh; bottom: 2.7vh; font-size: 1.05vh; opacity: .7; }
+
+  /* global layers */
+  #clouds { position: absolute; inset: 0; pointer-events: none; z-index: 40; }
+  #clouds img { position: absolute; width: 95vw; opacity: .0; will-change: transform; }
+  #jet { position: absolute; left: 0; top: 0; z-index: 50; pointer-events: none; will-change: transform; visibility: hidden; }
+  #jet .body { position: absolute; inset: 0; }
+  #jet img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; transform: rotate(26deg);
+    filter: drop-shadow(0 2.5vh 2.5vh rgba(0,0,0,.45)); }
+  #jet .trail { position: absolute; top: 88%; width: 1.4%; height: 260%; border-radius: 50%;
+    background: linear-gradient(to bottom, rgba(255,236,210,.85), rgba(255,255,255,.18) 35%, rgba(255,255,255,0));
+    filter: blur(2px); }
+  #jet .glow { position: absolute; top: 84%; width: 9%; height: 9%; border-radius: 50%;
+    background: radial-gradient(circle, #fff 0%, #ffd27a 30%, rgba(255,120,30,.75) 55%, rgba(255,80,0,0) 72%);
+    mix-blend-mode: screen; animation: flick .07s infinite alternate; }
+  @keyframes flick { from { transform: scale(1); opacity: .9 } to { transform: scale(1.25); opacity: 1 } }
+  #ring { position: absolute; z-index: 45; width: 10px; height: 10px; border-radius: 50%; border: 2px solid rgba(255,255,255,.55);
+    pointer-events: none; opacity: 0; transform: translate(-50%,-50%); }
+
+  #vignette { position: absolute; inset: 0; z-index: 60; pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,.45) 100%); }
+  #glass { position: absolute; inset: 0; z-index: 61; pointer-events: none; mix-blend-mode: screen; opacity: .07;
+    background: linear-gradient(115deg, rgba(255,255,255,0) 30%, rgba(255,255,255,.9) 45%, rgba(255,255,255,0) 60%); }
+  #grain { position: absolute; inset: -50%; z-index: 62; pointer-events: none; opacity: .07;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    animation: grain 0.5s steps(4) infinite; }
+  @keyframes grain { 0% { transform: translate(0,0) } 25% { transform: translate(-3%,2%) } 50% { transform: translate(2%,-3%) } 75% { transform: translate(-2%,-1%) } 100% { transform: translate(1%,3%) } }
+
+  #bar { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; z-index: 70; background: var(--amber);
+    transform-origin: left; transform: scaleX(0); opacity: .9; }
+  #hud { position: absolute; z-index: 70; left: 3vh; bottom: 2.4vh; font-family: "Barlow Condensed", sans-serif;
+    font-weight: 600; font-size: 1.7vh; letter-spacing: .2em; opacity: .75; display: flex; gap: 1.4vh; align-items: center; }
+  #hud .dots { display: flex; gap: .6vh; }
+  #hud .dots i { width: 2.2vh; height: 2px; background: rgba(255,255,255,.35); }
+  #hud .dots i.done { background: var(--amber); }
+  #notes { position: absolute; z-index: 80; left: 50%; bottom: 6vh; transform: translateX(-50%); width: min(820px, 86vw);
+    background: rgba(8,10,14,.86); border: 1px solid rgba(255,255,255,.15); border-radius: 10px; padding: 16px 20px;
+    font-size: 16px; line-height: 1.5; display: none; }
+  #notes.show { display: block; }
+  #loader { position: absolute; inset: 0; z-index: 90; display: grid; place-items: center; background: #05070a;
+    font-family: "Barlow Condensed", sans-serif; letter-spacing: .3em; font-size: 2vh; }
+  #loader .track { width: 26vw; height: 2px; background: #1b2028; margin-top: 2vh; }
+  #loader .fill { height: 100%; width: 0; background: var(--amber); transition: width .2s; }
+  #start { margin-top: 3vh; font: inherit; letter-spacing: .3em; color: #05070a; background: var(--amber); border: 0;
+    padding: 1.4vh 3vh; cursor: pointer; visibility: hidden; }
+  #help { position: absolute; z-index: 70; right: 3vh; top: 6.4vh; font-size: 1.15vh; letter-spacing: .15em; opacity: 0;
+    text-transform: uppercase; }
+
+  .tl { position: absolute; left: 6vw; right: 6vw; top: 44vh; }
+  .tl .axis { position: absolute; left: 0; right: 0; top: 0; height: 2px; background: rgba(255,255,255,.85); transform-origin: left; }
+  .tl .node { position: absolute; top: -9.5vh; width: 18vw; }
+  .tl .node .yr { font-family: "Archivo Black", sans-serif; font-size: 5.2vh; }
+  .tl .node .dot { position: absolute; top: 8.6vh; left: 0; width: 1.6vh; height: 1.6vh; border-radius: 50%; background: #fff; transform: translate(-50%, 0); }
+  .tl .node .nm { margin-top: 4.6vh; font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 3.4vh; }
+  .tl .node .ds { font-size: 1.7vh; opacity: .85; }
+  .btn { pointer-events: auto; position: absolute; font-family: "Barlow Condensed", sans-serif; font-weight: 700; letter-spacing: .2em;
+    font-size: 1.9vh; padding: 1.2vh 2.6vh; border-radius: 999px; border: 1px solid #fff; color: #fff; background: rgba(0,0,0,.25); cursor: pointer; }
+  .btn.solid { background: var(--amber); border-color: var(--amber); color: #05070a; }
+</style>
+</head>
+<body>
+<div id="world">
+  <div id="clouds"><img id="c1" src="img/cloud1.png" alt=""><img id="c2" src="img/cloud2.png" alt=""></div>
+  <div id="jet"><div class="body">
+    <div class="trail" style="left:40%"></div><div class="trail" style="left:57%"></div>
+    <div class="glow" style="left:36%"></div><div class="glow" style="left:53%"></div>
+    <img src="img/jet.png" alt="">
+  </div></div>
+  <div id="ring"></div>
+  <div id="vignette"></div><div id="glass"></div><div id="grain"></div>
+  <div id="bar"></div>
+  <div id="hud"><span id="count">01 / 10</span><span class="dots" id="dots"></span></div>
+  <div id="help">→ next · ← back · P pause · F fullscreen · N notes</div>
+  <div id="notes"></div>
+  <div id="loader"><div style="text-align:center">CLEARED FOR TAKEOFF<div class="track"><div class="fill" id="fill"></div></div><button id="start">ENGAGE</button></div></div>
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   Scene data. Callout and headline coordinates are in a 960x540 design
+   frame; callouts are converted to photo coordinates so they stay glued
+   to the aircraft at any screen size.
+------------------------------------------------------------------- */
+const D = { w: 960, h: 540 };
+const SCENES = [
+  { id: "title", photo: "img/title.jpg", fx: .62, fy: .45, over: 1, ink: "#f4ead8",
+    shade: "linear-gradient(90deg, rgba(10,7,3,.75) 0%, rgba(10,7,3,.25) 45%, rgba(10,7,3,0) 70%)",
+    head: [["FIGHTER", "JETS"], "top"], sub: "SEVEN AIRCRAFT · TWENTY SECONDS EACH",
+    credit: "F-22 Raptor at twilight · U.S. Air Force photo by 2nd Lt. Samuel Eckholm (public domain)",
+    notes: "Fighter jets. I picked seven aircraft: the Super Hornet, two Sukhois, the F-22, and three stealth pioneers: the Ho 229, the B-2 and the F-117. Twenty seconds each, so watch the details I point out on every photo." },
+  { id: "fa18", photo: "img/fa18.jpg", fx: .5, fy: .32, over: 1, ink: "#0d1116",
+    model: "F/A-18F Super Hornet", maker: "Boeing · US Navy", head: [["LAUNCHED", "FROM A SHIP."], "bottom"],
+    calls: [ [760, 92, 820, 150, "RADAR", "In the nose"], [500, 205, 440, 120, "TWO SEATS", "Pilot + weapons officer", 1],
+             [600, 245, 700, 300, "VAPOR CONE", "A hard turn squeezes water out of the air"], [250, 345, 160, 250, "TWIN TAILS", "Control at high angles", 1] ],
+    specs: [["First flight", "1995"], ["Operational", "2001"], ["Weapon stations", "11"]],
+    credit: "F/A-18F high-g pass · U.S. Navy photo by PH2 Daniel J. McLain (public domain)",
+    notes: "The Super Hornet lives on aircraft carriers: a catapult throws it off the deck and a hook catches a wire to land. This F model has two seats, a pilot and a weapons officer. That white cloud is a vapor cone: in a hard turn the air pressure drops and moisture condenses. First flight 1995, operational 2001." },
+  { id: "su34", photo: "img/su34.jpg", fx: .5, fy: .5, over: 1.35, ink: "#0d1116",
+    model: "Sukhoi Su-34 Fullback", maker: "Russia · Fighter-bomber", head: [["SIDE BY", "SIDE."], "bottom"],
+    calls: [ [650, 208, 700, 120, "SIDE-BY-SIDE COCKPIT", "Two crew sit next to each other"], [740, 214, 800, 290, "FLAT 'DUCKBILL' NOSE", "Nicknamed the Platypus"],
+             [365, 185, 250, 110, "12 HARDPOINTS", "Bombs and missiles", 1], [205, 425, 330, 470, "TAIL STING", "Rear-facing warning radar"] ],
+    specs: [["First flight", "1990"], ["In service", "2014"], ["Crew", "2"]],
+    credit: "Su-34 at MAKS 2013 · Photo: Doomych (public domain)",
+    notes: "The Su-34 is Russia's long-range strike jet, a bomber built from the Su-27 fighter. Its two crew sit side by side in an armoured cockpit with room to stand up on long missions. Pilots call it the Platypus because of its flat nose. First flight 1990, in service 2014." },
+  { id: "su57", photo: "img/su57.jpg", fx: .5, fy: .5, over: 1, ink: "#f4f6fa",
+    model: "Sukhoi Su-57 Felon", maker: "Russia · 5th generation", head: [["NEVER DOGFIGHT", "A SUKHOI."], "split"],
+    calls: [ [300, 220, 200, 300, "VAPOR SHELL", "Close to the speed of sound", 1], [570, 212, 640, 150, "STEALTH SHAPING", "Edges lined up to scatter radar"],
+             [506, 242, 560, 400, "THRUST VECTORING", "Engine nozzles that steer"], [775, 265, 850, 330, "AESA RADAR", "In the nose", 1] ],
+    specs: [["First flight", "2010"], ["Delivered", "2020"], ["Engines", "2"]],
+    credit: "Su-57 (T-50 prototype) · Photo: Rulexip, CC BY-SA 3.0",
+    notes: "The Su-57 is Russia's stealth fighter, NATO name Felon. It first flew in January 2010; the first production jet was delivered in December 2020. Its engine nozzles can steer the thrust, so it turns extremely hard. That rainbow cloud is a vapor shell that forms close to the speed of sound." },
+  { id: "f22", photo: "img/f22.jpg", fx: .5, fy: .5, over: 1, ink: "#f4f6fa",
+    model: "Lockheed Martin F-22 Raptor", maker: "USA · 5th generation", head: [["FIRST OF THE", "FIFTH GEN."], "bottom"],
+    calls: [ [350, 283, 250, 200, "AFTERBURNERS LIT", "Nozzles that tilt up and down", 1], [440, 60, 320, 80, "DIAMOND WING", "Big, thin and stealthy", 1],
+             [735, 345, 800, 410, "STEALTH NOSE", "Radar hidden inside", 1], [600, 300, 680, 240, "INTERNAL BAYS", "Missiles carried inside"] ],
+    specs: [["In service", "2005"], ["Speed", "Mach 2"], ["Crew", "1"]],
+    credit: "F-22 demo, Davis-Monthan AFB · U.S. Air Force photo by SrA Chris Drzazgowski (public domain)",
+    notes: "The F-22 Raptor was the first fifth-generation fighter in service, declared operational in December 2005. Its nozzles tilt up and down to push the nose around, and it can fly faster than sound without afterburner, called supercruise. Weapons ride inside bays to keep it stealthy." },
+  { id: "ho229", photo: "img/ho229.jpg", fx: 0, fy: .2, over: 1.75, ink: "#f4f1ea",
+    shade: "linear-gradient(180deg, rgba(5,7,10,.75) 0%, rgba(5,7,10,0) 38%, rgba(5,7,10,0) 62%, rgba(5,7,10,.75) 100%)",
+    model: "Horten Ho 229 V3", maker: "Germany · 1945", head: [["A FLYING WING", "IN 1945."], "top"],
+    calls: [ [520, 240, 640, 330, "TWO JET ENGINES", "Buried inside the wing"], [160, 380, 240, 440, "NO TAIL AT ALL", "The whole plane is one wing"],
+             [150, 300, 90, 250, "WOOD + STEEL", "Plywood wings, steel frame", 1] ],
+    specs: [["First jet flight", "1945"], ["Built by", "Horten bros."], ["Today", "Smithsonian"]],
+    credit: "Ho 229 V3 at the Smithsonian · Photo: HawkeyeUK, CC BY-SA 2.0",
+    notes: "The Horten Ho 229 was a German jet-powered flying wing. A prototype flew under jet power in February 1945 and crashed weeks later. US troops captured an unfinished one in 1945; it is in the Smithsonian today. People often say the B-2 copied it, but Northrop had flown its own flying wings since 1940, so historians call that a myth." },
+  { id: "b2", photo: "img/b2.jpg", fx: .5, fy: .5, over: 1, ink: "#0d1116",
+    model: "Northrop B-2 Spirit", maker: "USA · Stealth bomber", head: [["NO TAIL.", "NO TRACE."], "split"],
+    calls: [ [440, 208, 500, 130, "2 PILOTS", "Missions can last over 30 hours"], [600, 250, 660, 330, "SAWTOOTH EDGES", "Zig-zags hide it from radar"],
+             [78, 284, 120, 350, "52 M WINGSPAN", "Wider than a Boeing 737 is long"] ],
+    specs: [["First flight", "1989"], ["Built", "21"], ["Crew", "2"]],
+    credit: "B-2 low approach over RAF Fairford · U.S. Air Force photo by SrA Eugene Oliver (public domain)",
+    notes: "The B-2 Spirit is a stealth bomber shaped as one huge wing, 52 metres across, with no tail. Its edges are cut in zig-zags so radar bounces away. Only 21 were built, and it first flew in July 1989. Two pilots fly missions that can last more than a day, refuelling in the air." },
+  { id: "f117", photo: "img/f117.jpg", fx: .5, fy: .5, over: 1, ink: "#ffffff",
+    shade: "linear-gradient(180deg, rgba(5,7,10,.65) 0%, rgba(5,7,10,0) 40%)",
+    model: "Lockheed F-117 Nighthawk", maker: "USA · 1983", head: [["THE FIRST", "STEALTH JET."], "top"],
+    calls: [ [604, 399, 720, 420, "FLAT FACETS", "Bounce radar away like a mirror"], [483, 283, 560, 230, "BLACK FINISH", "Radar-absorbing, built for night"] ],
+    specs: [["First flight", "1981"], ["Revealed", "1988"], ["Retired", "2008"]],
+    credit: "F-117s over New Mexico · U.S. Air Force photo (public domain)",
+    notes: "The F-117 Nighthawk was the first operational aircraft designed around stealth. It is built from flat panels, facets, that reflect radar away the way a disco ball reflects light. It first flew in 1981, stayed secret until 1988, and officially retired in 2008, though a few still fly in exercises." },
+  { id: "timeline", photo: "img/sky.jpg", fx: 0, fy: .35, over: 1.15, ink: "#f4f6fa",
+    shade: "linear-gradient(180deg, rgba(5,8,12,.55), rgba(5,8,12,.35) 50%, rgba(5,8,12,.6))",
+    head: [["80 YEARS OF", "HIDING FROM RADAR"], "top"], timeline: [["1945", "Ho 229", "Jet flying wing"], ["1981", "F-117", "First stealth jet flies"], ["1989", "B-2", "Stealth flying wing"], ["2005", "F-22", "Stealth fighter in service"], ["2010", "Su-57", "Russia's stealth jet flies"]],
+    credit: "View from an airliner window · Photo: Famartin, CC BY-SA 4.0",
+    notes: "Put them on one line: the Ho 229 flying wing in 1945, the F-117, the first true stealth jet, flying in 1981, the B-2 in 1989, the F-22 in service in 2005 and the Su-57 flying in 2010. Each one made it harder for radar to see what's coming." },
+  { id: "end", photo: "img/title.jpg", fx: .3, fy: .6, over: 1.3, ink: "#f4ead8",
+    shade: "linear-gradient(0deg, rgba(10,7,3,.7) 0%, rgba(10,7,3,0) 55%)",
+    head: [["WHICH ONE", "WOULD YOU FLY?"], "bottom"], end: true,
+    credit: "F-22 Raptor at twilight · U.S. Air Force photo (public domain)",
+    notes: "Carrier jet, flying platypus, rainbow Sukhoi, the Raptor and three stealth pioneers. Which one would you fly? Thanks for listening." }
+];
+
+/* ---------------- build DOM ---------------- */
+const world = document.getElementById("world");
+const els = SCENES.map((s, i) => {
+  const sec = document.createElement("section"); sec.className = "scene"; sec.style.zIndex = 1; sec.style.color = s.ink;
+  sec.innerHTML = `<div class="cam"><div class="par"><img class="photo" src="${s.photo}" alt="${s.model || s.id}">
+      <div class="shade" style="background:${s.shade || "none"}"></div>
+      <svg class="calls"></svg><div class="labs"></div></div></div>
+    <div class="text"></div>`;
+  world.insertBefore(sec, document.getElementById("clouds"));
+  const t = sec.querySelector(".text");
+  let html = "";
+  if (s.model) html += `<div class="border"></div><div class="model"><i>${s.model}</i><span class="rule"></span><small>${s.maker}</small></div>`;
+  const [lines, pos] = s.head;
+  if (pos === "split") {
+    html += `<div class="head h1" style="top:9vh"><span class="ln"><span>${lines[0]}</span></span></div>`;
+    html += `<div class="head h2" style="bottom:13vh"><span class="ln"><span>${lines[1]}</span></span></div>`;
+  } else {
+    const where = pos === "top" ? "top:9vh" : "bottom:13vh";
+    html += `<div class="head h1" style="${where}">${lines.map(l => `<span class="ln"><span>${l}</span></span>`).join("")}</div>`;
+  }
+  if (s.sub) html += `<div style="position:absolute;left:5.4vw;top:35vh;font-size:1.7vh;letter-spacing:.35em" class="sub">${s.sub}</div>`;
+  if (s.specs) html += `<div class="specs">${s.specs.map(p => `<div class="spec"><small>${p[0]}</small><b>${p[1]}</b></div>`).join("")}</div>`;
+  if (s.timeline) html += `<div class="tl"><div class="axis"></div>${s.timeline.map((n, k) =>
+      `<div class="node" style="left:${k * 22}%"><div class="yr" style="color:${k === 0 || k === 4 ? "var(--amber)" : "#fff"}">${n[0]}</div><div class="dot"></div><div class="nm">${n[1]}</div><div class="ds">${n[2]}</div></div>`).join("")}</div>`;
+  if (s.end) html += `<button class="btn solid" id="again" style="right:5vw;bottom:13vh">↻ FLY AGAIN</button>`;
+  html += `<div class="credit">${s.credit}</div>`;
+  t.innerHTML = html;
+  return sec;
+});
+const dots = document.getElementById("dots");
+SCENES.forEach(() => dots.appendChild(document.createElement("i")));
+
+/* ---------------- layout: photo cover + callouts glued to the photo ---------------- */
+function frame(iw, ih, W, H, s) {
+  const k = Math.max(W / iw, H / ih) * s.over * 1.04;
+  const pw = iw * k, ph = ih * k;
+  return { k, pw, ph, l: -(pw - W) * s.fx, t: -(ph - H) * s.fy };
+}
+function layout(i) {
+  const s = SCENES[i], sec = els[i], img = sec.querySelector(".photo");
+  const iw = img.naturalWidth, ih = img.naturalHeight; if (!iw) return;
+  const W = innerWidth, H = innerHeight;
+  const f = frame(iw, ih, W, H, s), d = frame(iw, ih, D.w, D.h, { ...s, over: s.over / 1.04 * 1.04 });
+  Object.assign(img.style, { width: f.pw + "px", height: f.ph + "px", left: f.l + "px", top: f.t + "px" });
+  const map = (x, y) => [f.l + (x - d.l) / d.pw * f.pw, f.t + (y - d.t) / d.ph * f.ph];
+  const svg = sec.querySelector("svg.calls"), labs = sec.querySelector(".labs");
+  svg.setAttribute("width", W); svg.setAttribute("height", H); svg.innerHTML = ""; labs.innerHTML = "";
+  const u = Math.min(W / D.w, H / D.h);
+  // tactical callouts: target brackets + pulse, angled leader, underline, typed label
+  (s.calls || []).forEach((c, k) => {
+    const [px, py] = map(c[0], c[1]); let [lx, ly] = map(c[2], c[3]);
+    lx = Math.max(24, Math.min(W - 24, lx)); ly = Math.max(70, Math.min(H - 70, ly));
+    const dir = c[6] ? -1 : 1, run = 150 * u, b = 9 * u, g = 4 * u;
+    const ex = lx + dir * run;
+    const br = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) =>
+      `M${px + sx * b} ${py + sy * (b - g)} L${px + sx * b} ${py + sy * b} L${px + sx * (b - g)} ${py + sy * b}`).join(" ");
+    svg.insertAdjacentHTML("beforeend", `<g class="co">
+      <circle class="pulse" cx="${px}" cy="${py}" r="${4 * u}" stroke="${s.ink}"/>
+      <path class="ret" d="${br}" stroke="${s.ink}"/>
+      <circle class="dot" cx="${px}" cy="${py}" r="${2.2 * u}" fill="${s.ink}"/>
+      <polyline points="${px},${py} ${lx},${ly} ${ex},${ly}" stroke="${s.ink}"/>
+      <line class="tick" x1="${ex}" y1="${ly - 4 * u}" x2="${ex}" y2="${ly + 4 * u}" stroke="${s.ink}" stroke-width="1.4"/></g>`);
+    const lab = document.createElement("div"); lab.className = "lab";
+    const code = "0" + (k + 1);
+    lab.innerHTML = `<b style="font-size:${16 * u}px"><em style="font-size:${10 * u}px">[${code}]</em><span class="ty" data-t="${c[4]}"></span></b>` +
+      `<span class="ty" style="font-size:${10.5 * u}px" data-t="${c[5]}"></span>`;
+    lab.style.top = (ly - 34 * u) + "px";
+    if (dir < 0) { lab.style.right = (W - lx) + "px"; lab.style.textAlign = "right"; } else lab.style.left = lx + "px";
+    lab.style.width = run + "px";
+    labs.appendChild(lab);
+  });
+}
+addEventListener("resize", () => els.forEach((_, i) => layout(i)));
+
+/* ---------------- ambient motion ---------------- */
+let cur = 0, busy = false, ambient = null, paused = false;
+function startAmbient(i) {
+  if (ambient) ambient.kill();
+  const cam = els[i].querySelector(".cam");
+  ambient = gsap.to(cam, { scale: 1.07, xPercent: i % 2 ? -1.6 : 1.6, yPercent: -0.8, duration: 22, ease: "none" });
+}
+// drifting cloud wisps in front of the photo = the window feel
+const c1 = document.getElementById("c1"), c2 = document.getElementById("c2");
+function driftClouds() {
+  gsap.set(c1, { x: innerWidth * 1.05, y: innerHeight * .55, opacity: .22 });
+  gsap.set(c2, { x: -innerWidth * 1.0, y: innerHeight * .02, opacity: .16 });
+  gsap.to(c1, { x: -innerWidth * 1.05, duration: 70, ease: "none", repeat: -1 });
+  gsap.to(c2, { x: innerWidth * 1.05, duration: 95, ease: "none", repeat: -1 });
+}
+// mouse / tilt parallax: photo, clouds and text sit at different depths
+const mx = { x: 0, y: 0 };
+const qs = [];
+function hookParallax() {
+  els.forEach(sec => {
+    qs.push([gsap.quickTo(sec.querySelector(".par"), "x", { duration: 1.2, ease: "power3" }), gsap.quickTo(sec.querySelector(".par"), "y", { duration: 1.2, ease: "power3" }), 18]);
+    qs.push([gsap.quickTo(sec.querySelector(".text"), "x", { duration: 1.2, ease: "power3" }), gsap.quickTo(sec.querySelector(".text"), "y", { duration: 1.2, ease: "power3" }), -6]);
+  });
+  const cl = document.getElementById("clouds");
+  qs.push([gsap.quickTo(cl, "x", { duration: 1.4, ease: "power3" }), gsap.quickTo(cl, "y", { duration: 1.4, ease: "power3" }), 46]);
+  const apply = () => qs.forEach(([qx, qy, k]) => { qx(-mx.x * k); qy(-mx.y * k); });
+  addEventListener("pointermove", e => { mx.x = e.clientX / innerWidth - .5; mx.y = e.clientY / innerHeight - .5; apply(); });
+  addEventListener("deviceorientation", e => { if (e.gamma == null) return; mx.x = Math.max(-.5, Math.min(.5, e.gamma / 40)); mx.y = Math.max(-.5, Math.min(.5, (e.beta - 45) / 60)); apply(); });
+}
+
+/* ---------------- scene text entrance ---------------- */
+function enterText(i) {
+  const sec = els[i];
+  const tl = gsap.timeline();
+  tl.fromTo(sec.querySelectorAll(".head .ln > span"), { yPercent: 110 }, { yPercent: 0, duration: 1.0, ease: "expo.out", stagger: .12 }, 0);
+  tl.fromTo(sec.querySelectorAll(".border"), { opacity: 0 }, { opacity: .55, duration: 1.2 }, 0);
+  tl.fromTo(sec.querySelectorAll(".model .rule"), { scaleX: 0 }, { scaleX: 1, duration: 1.2, ease: "expo.out" }, .1);
+  tl.fromTo(sec.querySelectorAll(".model i, .model small, .sub"), { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: .8, stagger: .08 }, .15);
+  // tactical callouts: brackets lock on, leader draws out, label types in
+  const labs = sec.querySelectorAll(".lab");
+  sec.querySelectorAll("svg.calls g.co").forEach((g, k) => {
+    const at = .6 + k * .42;
+    const dot = g.querySelector(".dot"), cx = dot.cx.baseVal.value, cy = dot.cy.baseVal.value;
+    const pl = g.querySelector("polyline"), pts = [...pl.points];
+    let len = 0; for (let j = 1; j < pts.length; j++) len += Math.hypot(pts[j].x - pts[j - 1].x, pts[j].y - pts[j - 1].y);
+    tl.set(g, { opacity: 1 }, at);
+    tl.fromTo(g.querySelector(".ret"), { opacity: 0, scale: 2.6, rotation: 45, svgOrigin: `${cx} ${cy}` },
+      { opacity: 1, scale: 1, rotation: 0, svgOrigin: `${cx} ${cy}`, duration: .45, ease: "power3.out" }, at);
+    tl.fromTo(g.querySelector(".ret"), { opacity: 1 }, { keyframes: [{ opacity: .2 }, { opacity: 1 }, { opacity: .2 }, { opacity: 1 }], duration: .3 }, at + .45);
+    tl.fromTo(dot, { opacity: 0 }, { opacity: 1, duration: .1 }, at + .2);
+    tl.fromTo(g.querySelector(".pulse"), { opacity: 0 }, { opacity: 1, duration: .1 }, at + .3);
+    tl.fromTo(pl, { strokeDasharray: len, strokeDashoffset: len }, { strokeDashoffset: 0, duration: .55, ease: "power2.inOut" }, at + .35);
+    tl.fromTo(g.querySelector(".tick"), { opacity: 0 }, { opacity: 1, duration: .1 }, at + .85);
+    const lab = labs[k]; if (!lab) return;
+    tl.set(lab, { opacity: 1 }, at + .7);
+    lab.querySelectorAll(".ty").forEach((el, j) => {
+      const full = el.dataset.t, o = { n: 0 };
+      el.textContent = "";
+      tl.to(o, { n: full.length, duration: Math.min(.9, .03 * full.length), ease: "none",
+        onUpdate: () => { const c = Math.round(o.n); el.textContent = full.slice(0, c) + (c < full.length ? "▌" : ""); } }, at + .75 + j * .25);
+    });
+  });
+  tl.fromTo(sec.querySelectorAll(".spec"), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: .6, stagger: .1 }, 1.0);
+  tl.fromTo(sec.querySelectorAll(".tl .axis"), { scaleX: 0 }, { scaleX: 1, duration: 1.4, ease: "expo.out" }, .3);
+  tl.fromTo(sec.querySelectorAll(".tl .node"), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: .6, stagger: .16 }, .5);
+  tl.fromTo(sec.querySelectorAll(".credit, .btn"), { opacity: 0 }, { opacity: 1, duration: .8 }, 1.2);
+  return tl;
+}
+
+/* ---------------- the fly-through transition ---------------- */
+const jet = document.getElementById("jet"), ring = document.getElementById("ring");
+const PATHS = [
+  [[-.25, 1.2], [.45, .55], [1.3, -.25]],   // bottom-left to top-right
+  [[1.25, 1.1], [.5, .6], [-.3, -.2]],      // bottom-right to top-left
+  [[-.3, .75], [.5, .35], [1.3, .15]],      // low left to right, climbing
+  [[.15, 1.3], [.55, .45], [.95, -.35]]     // straight up the middle
+];
+const bez = (p, t) => { const a = 1 - t; return [a * a * p[0][0] + 2 * a * t * p[1][0] + t * t * p[2][0], a * a * p[0][1] + 2 * a * t * p[1][1] + t * t * p[2][1]]; };
+const bezD = (p, t) => [2 * (1 - t) * (p[1][0] - p[0][0]) + 2 * t * (p[2][0] - p[1][0]), 2 * (1 - t) * (p[1][1] - p[0][1]) + 2 * t * (p[2][1] - p[1][1])];
+
+function go(n, back = false) {
+  if (busy || n === cur || n < 0 || n >= SCENES.length) return;
+  busy = true;
+  const from = els[cur], to = els[n];
+  layout(n);
+  gsap.set(to, { zIndex: 3 }); gsap.set(from, { zIndex: 2 });
+  to.classList.add("on");
+  gsap.set(to.querySelectorAll(".head .ln > span, .lab, .spec, .credit, .model i, .model small, .sub, .btn, .tl .node"), { opacity: 0 });
+  gsap.set(to.querySelectorAll(".head .ln > span, .lab, .spec, .credit, .model i, .model small, .sub, .btn, .tl .node"), { opacity: 1, delay: .01 });
+  gsap.set(to.querySelectorAll(".head .ln > span"), { yPercent: 110 });
+  gsap.set(to.querySelectorAll(".lab, .spec, .credit, .btn, .tl .node"), { opacity: 0 });
+  gsap.set(to.querySelectorAll("svg.calls g.co"), { opacity: 0 });
+  const toCam = to.querySelector(".cam");
+  gsap.set(toCam, { scale: 1.35, xPercent: 0, yPercent: 0, filter: "blur(10px) brightness(1.15)" });
+
+  let p = PATHS[(n + (back ? 2 : 0)) % PATHS.length];
+  if (back) p = p.map(([x, y]) => [1 - x, y]);
+  const W = innerWidth, H = innerHeight, diag = Math.hypot(W, H);
+  const size = Math.min(W, H) * .62;
+  gsap.set(jet, { width: size, height: size, visibility: "visible" });
+  const st = { t: 0 };
+  const tl = gsap.timeline({ onComplete: () => {
+    from.classList.remove("on"); gsap.set(from, { zIndex: 1, clearProps: "clipPath" });
+    gsap.set(from.querySelector(".cam"), { clearProps: "all" });
+    to.style.clipPath = "none"; jet.style.visibility = "hidden";
+    cur = n; busy = false; markHud(); startAmbient(n); restartTimer();
+  } });
+  // jet flight: grows as it passes the camera
+  tl.to(st, { t: 1, duration: 1.9, ease: "power1.inOut", onUpdate: () => {
+    const t = st.t, [x, y] = bez(p, t), [dx, dy] = bezD(p, t);
+    const ang = Math.atan2(dx * W, -dy * H) * 180 / Math.PI;
+    const sc = .45 + Math.sin(t * Math.PI) * .9 + t * .35;
+    gsap.set(jet, { x: x * W - size / 2, y: y * H - size / 2, rotation: ang, scale: sc });
+    // the next scene opens in the jet's wake
+    const r = Math.max(0, (t - .22) / .7); const e = 1 - Math.pow(1 - Math.min(1, r), 3);
+    to.style.clipPath = `circle(${e * diag * 1.15}px at ${x * W}px ${y * H}px)`;
+  } }, 0);
+  // old view rushes past and blurs
+  tl.to(from.querySelector(".cam"), { scale: 1.22, filter: "blur(8px) brightness(.8)", duration: 1.6, ease: "power2.in" }, 0.1);
+  tl.to(from.querySelector(".text"), { opacity: 0, duration: .5 }, 0);
+  // new view settles in like a camera locking on
+  tl.to(toCam, { scale: 1, filter: "blur(0px) brightness(1)", duration: 2.2, ease: "expo.out" }, .55);
+  // sonic ring + a little turbulence
+  tl.fromTo(ring, { left: W * bez(p, .45)[0], top: H * bez(p, .45)[1], width: 10, height: 10, opacity: .9 },
+    { width: diag * .7, height: diag * .7, opacity: 0, duration: 1.1, ease: "power2.out" }, .8);
+  tl.fromTo(world, { x: 0, y: 0 }, { keyframes: [{ x: -5, y: 3 }, { x: 6, y: -4 }, { x: -4, y: 2 }, { x: 3, y: -1 }, { x: 0, y: 0 }], duration: .5, ease: "none" }, .75);
+  // clouds whip past
+  tl.fromTo("#clouds", { opacity: 1 }, { keyframes: [{ opacity: 1 }], duration: .1 }, 0);
+  tl.to([c1, c2], { opacity: .55, duration: .4 }, .3).to([c1, c2], { opacity: c => c ? .16 : .22, duration: 1.2 }, 1.2);
+  tl.add(() => { gsap.set(to.querySelector(".text"), { opacity: 1 }); enterText(n); }, 1.25);
+}
+const next = () => go(cur + 1), prev = () => go(cur - 1, true);
+
+/* ---------------- HUD, timer, keys ---------------- */
+const bar = document.getElementById("bar"); let timer = null;
+function restartTimer() {
+  if (timer) timer.kill();
+  if (paused || SCENES[cur].end) { gsap.set(bar, { scaleX: 0 }); return; }
+  timer = gsap.fromTo(bar, { scaleX: 0 }, { scaleX: 1, duration: 20, ease: "none", onComplete: next });
+}
+function markHud() {
+  document.getElementById("count").textContent = String(cur + 1).padStart(2, "0") + " / " + String(SCENES.length).padStart(2, "0");
+  [...dots.children].forEach((d, k) => d.classList.toggle("done", k <= cur));
+  const nt = document.getElementById("notes"); nt.textContent = SCENES[cur].notes;
+}
+addEventListener("keydown", e => {
+  if (["ArrowRight", "PageDown", " ", "Enter"].includes(e.key)) { e.preventDefault(); next(); }
+  else if (["ArrowLeft", "PageUp", "Backspace"].includes(e.key)) { e.preventDefault(); prev(); }
+  else if (e.key === "p" || e.key === "P") { paused = !paused; if (paused && timer) timer.pause(); else restartTimer(); }
+  else if (e.key === "f" || e.key === "F") { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
+  else if (e.key === "n" || e.key === "N") document.getElementById("notes").classList.toggle("show");
+  else if (e.key === "Home") go(0, true);
+});
+world.addEventListener("click", e => { if (e.target.id === "again") { go(0, true); return; } if (document.getElementById("loader").style.display !== "none") return; next(); });
+
+/* ---------------- preload, then take off ---------------- */
+const srcs = [...new Set([...SCENES.map(s => s.photo), "img/jet.png", "img/cloud1.png", "img/cloud2.png"])];
+let loaded = 0;
+Promise.all(srcs.map(src => new Promise(res => { const im = new Image(); im.onload = im.onerror = () => { loaded++; document.getElementById("fill").style.width = (loaded / srcs.length * 100) + "%"; res(); }; im.src = src; })))
+  .then(() => Promise.all(els.map(sec => sec.querySelector(".photo").decode().catch(() => {}))))
+  .then(() => { const b = document.getElementById("start"); b.style.visibility = "visible"; b.focus(); });
+
+document.getElementById("start").addEventListener("click", e => {
+  e.stopPropagation();
+  if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+  const L = document.getElementById("loader");
+  els.forEach((_, i) => layout(i));
+  els[0].classList.add("on"); gsap.set(els[0], { zIndex: 2 });
+  gsap.set(els[0].querySelector(".cam"), { scale: 1.4, filter: "blur(12px)" });
+  gsap.to(L, { opacity: 0, duration: .8, onComplete: () => { L.style.display = "none"; } });
+  gsap.to(els[0].querySelector(".cam"), { scale: 1, filter: "blur(0px)", duration: 2.6, ease: "expo.out" });
+  setTimeout(() => enterText(0), 500);
+  driftClouds(); hookParallax(); markHud(); startAmbient(0); restartTimer();
+  gsap.fromTo("#help", { opacity: 0 }, { opacity: .6, duration: 1, delay: 2 });
+  gsap.to("#help", { opacity: 0, duration: 1, delay: 9 });
+});
+</script>
+</body>
+</html>
