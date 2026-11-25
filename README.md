@@ -4,7 +4,7 @@ A cinematic presentation: seven aircraft. Slides change only when you click or p
 
 **Live:** https://jaisnavbuildsrandomshit.github.io/fighter-jets/
 
-Every jet is a moving clip: it plays, slows into a speed ramp and slams to a freeze frame, then Ace Combat-style lock-on reticles and Watch Dogs-style profiler cards tag its special features. Scenes hard-cut from one jet to the next, with no sound. Four jets use real military footage; the Su-57, F-14 and F-117 have no free real footage, so they use videos embedded from YouTube (Su-57 manoeuvre footage, an official F-14 game trailer and real F-117 low-level footage).
+Every jet is a moving clip: it plays, slows into a speed ramp and slams to a freeze frame, then Ace Combat-style lock-on reticles and Watch Dogs-style profiler cards tag its special features. Scenes hard-cut from one jet to the next, with no sound. Three jets use real military footage; the Su-35, Su-57, F-14 and F-117 have no free real footage, so they use videos embedded from YouTube (Su-35 and Su-57 manoeuvre footage, an official F-14 game trailer and real F-117 low-level footage).
 
 ## Controls
 
@@ -43,7 +43,7 @@ Fonts: Archivo Black, Barlow Condensed, Inter and Share Tech Mono (Google Fonts)
 |---|---|---|
 | F-22 | [F-22 Afterburner Launches during PF 22-4 (4K Slowmo)](https://www.dvidshub.net/video/838229), U.S. Air Force, streamed from DVIDS | Public domain |
 | F/A-18 Super Hornet | [Navy Super Hornets conduct flight operations during Northern Edge 2021](https://www.dvidshub.net/video/793950), U.S. Navy via DVIDS | Public domain |
-| Su-35 | [Su-35S multipurpose fighter](https://commons.wikimedia.org/wiki/File:Su-35S_multipurpose_fighter.webm), Russian Ministry of Defence (mil.ru), streamed from Wikimedia Commons | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| Su-35 | [Sukhoi Su-35 in Action](https://www.youtube.com/watch?v=1tMxxfXg34I), Haci Productions (YouTube embed). Freeze photo: frame from [Su-35S multipurpose fighter](https://commons.wikimedia.org/wiki/File:Su-35S_multipurpose_fighter.webm), Russian Ministry of Defence (mil.ru) | © respective owners; photo [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | B-2 Spirit | [KC-135 refuels B-2 Spirit for Super Bowl LV](https://www.dvidshub.net/video/782929), U.S. Air Force via DVIDS | Public domain |
 | Su-57 | [Su-57 Felon Maneuverability](https://www.youtube.com/watch?v=PuW6Ha2sBaQ), Haci Productions (YouTube embed) | © respective owners |
 | F-14 Tomcat | [DCS F-14A release trailer](https://www.youtube.com/watch?v=RTWSu4Uxsd4), Heatblur Simulations (game footage, official YouTube embed) | © Heatblur Simulations |
