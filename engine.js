@@ -98,9 +98,24 @@
     let holdT = null;
     box.pause = () => { live = false; want = null; clearInterval(holdT); if (ok) p.pauseVideo(); };
     // "living freeze": keep playing at the slowest speed and loop the same split second, so YouTube never draws its pause icon
-    box.hold = t => { live = true; clearInterval(holdT); if (!ok) return; p.setPlaybackRate(.25); rate = .25; p.seekTo(t, true); holdT = setInterval(() => p.seekTo(t, true), 250); };
+    box.hold = t => { live = true; clearInterval(holdT); if (!ok) return; p.setPlaybackRate(.25); rate = .25; };   // online fallback: quarter-speed slow motion, no seeking (seeking made YouTube show its spinner)
   }
   SCENES.forEach((s, i) => { if (s.yt) ytVid($(".vid", els[i]), s); });
+  // a clip file you saved yourself (vid/*.mp4, never uploaded) replaces the YouTube player: real video = clean pause, no YouTube icon
+  SCENES.forEach((s, i) => {
+    if (!s.local || !s.yt) return;
+    const probe = document.createElement("video");
+    probe.muted = true; probe.playsInline = true; probe.preload = "metadata"; probe.src = s.local;
+    probe.addEventListener("loadedmetadata", () => {
+      const old = $(".vid", els[i]);
+      probe.className = "vid"; probe.style.cssText = old.style.cssText;
+      // the YouTube player is cropped 112% around its centre: match it so the callouts land on the same spots
+      probe.style.transform = "scale(1.12)"; probe.style.transformOrigin = "50% 50%";
+      old.replaceWith(probe);
+      s.video = s.local; delete s.yt; delete s.ytHold;
+      if (i === cur || i === cur + 1) prime(i);
+    }, { once: true });
+  });
 
   function layout(i) {
     const s = SCENES[i], sec = els[i], photo = $(".photo", sec);
