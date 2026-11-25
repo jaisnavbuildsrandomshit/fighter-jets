@@ -447,11 +447,8 @@
 
   /* ---------- HUD / timer / keys ---------- */
   const bar = document.getElementById("bar");
-  function restartTimer() {
-    if (timer) timer.kill();
-    if (paused || SCENES[cur].end) { gsap.set(bar, { scaleX: 0 }); return; }
-    timer = gsap.fromTo(bar, { scaleX: 0 }, { scaleX: 1, duration: SCENES[cur].hold || 20, ease: "none", onComplete: () => go(cur + 1) });
-  }
+  // no auto-advance: the presenter changes slides (click, → / Space, ←)
+  function restartTimer() { if (timer) timer.kill(); timer = null; gsap.set(bar, { display: "none" }); }
   function hud() {
     document.getElementById("count").textContent = String(cur + 1).padStart(2, "0") + " / " + String(SCENES.length).padStart(2, "0");
     document.getElementById("notes").textContent = SCENES[cur].notes || "";
@@ -462,7 +459,6 @@
     // sound removed (M key no longer used)
     if (["ArrowRight", "PageDown", " ", "Enter"].includes(e.key)) { e.preventDefault(); go(cur + 1); }
     else if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); go(cur - 1); }
-    else if (/^[pP]$/.test(e.key)) { paused = !paused; if (paused && timer) timer.pause(); else restartTimer(); }
     else if (/^[fF]$/.test(e.key)) { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
     else if (/^[nN]$/.test(e.key)) document.getElementById("notes").classList.toggle("show");
     else if (e.key === "Home") go(0);

@@ -1,6 +1,6 @@
 # Fighter Jets
 
-A cinematic presentation: seven aircraft, twenty seconds each.
+A cinematic presentation: seven aircraft. Slides change only when you click or press → / Space (← goes back).
 
 **Live:** https://jaisnavbuildsrandomshit.github.io/fighter-jets/
 
@@ -13,7 +13,6 @@ Every jet is a moving clip: it plays, slows into a speed ramp and slams to a fre
 | Click / any key | Start (from the black ready screen) |
 | → / Space / click | Next scene |
 | ← | Previous scene |
-| P | Pause or resume the 20-second timer |
 | N | Speaker notes |
 | F | Fullscreen |
 | Home | Back to the start |
