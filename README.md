@@ -47,6 +47,6 @@ Fonts: Archivo Black, Barlow Condensed, Inter and Share Tech Mono (Google Fonts)
 | B-2 Spirit | [KC-135 refuels B-2 Spirit for Super Bowl LV](https://www.dvidshub.net/video/782929), U.S. Air Force via DVIDS | Public domain |
 | Su-57 | [Su-57 Felon Maneuverability](https://www.youtube.com/watch?v=PuW6Ha2sBaQ), Haci Productions (YouTube embed) | © respective owners |
 | F-14 Tomcat | [DCS F-14A release trailer](https://www.youtube.com/watch?v=RTWSu4Uxsd4), Heatblur Simulations (game footage, official YouTube embed) | © Heatblur Simulations |
-| F-117 | ['Firebirds' update trailer](https://www.youtube.com/watch?v=YkJHT2NEXqw), War Thunder / Gaijin Entertainment (game footage, official YouTube embed) | © Gaijin Entertainment |
+| F-117 | [F-117 Nighthawk UP CLOSE at Sentry Savannah 2022](https://www.youtube.com/watch?v=LJCWxH3TBLk), Mike Killian (YouTube embed) | © Mike Killian |
 
 YouTube clips are streamed through YouTube's own embedded player, not copied or re-hosted. They never freeze on a paused YouTube frame (YouTube always draws a pause icon there): at the freeze point the slide cuts to a free-licensed photo of the same jet.

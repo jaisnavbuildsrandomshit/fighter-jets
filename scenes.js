@@ -66,14 +66,14 @@ window.SCENES = [
     credit: "KC-135 refuels a B-2 Spirit, 2021 · U.S. Air Force video via DVIDS (public domain)",
     notes: "Real footage from the boom operator's window of a KC-135 tanker: a B-2 Spirit slides up to refuel in mid-air. The B-2 is a stealth bomber shaped as one huge wing, 52 metres across, with no tail. Its engines are buried inside the wing with the intakes on top, so radar can't see them. Only 21 were built, and it first flew in July 1989. Two pilots fly missions that can last more than a day, refuelling in the air like this." },
 
-  { id: "f117", yt: "YkJHT2NEXqw", photo: "img/c_f117.jpg", vStart: 147.6, vFreeze: 150.95, rate: 1.0, fx: .5, fy: .5, over: 1, heading: 90,
+  { id: "f117", yt: "LJCWxH3TBLk", photo: "img/c_f117.jpg", vStart: 262.0, vFreeze: 272.0, rate: 1.0, fx: .5, fy: .5, over: 1, heading: 90,
     shade: "linear-gradient(0deg, rgba(5,7,10,.8) 0%, rgba(5,7,10,0) 32%)",
     model: "Lockheed F-117 Nighthawk", maker: "USA · 1983", head: [["THE FIRST STEALTH JET."], "bottom"], headSize: 92, specsTop: true,
     calls: [ [518, 168, 380, 95, "STARS AND STRIPES", "Flag paint for its final missions", 1], [467, 347, 400, 450, "FLAT FACETS", "Bounce radar away like a mirror", 1],
              [144, 334, 110, 255, "V-TAIL", "Two tails angled outward"], [879, 353, 905, 440, "BLACK FINISH", "Radar-absorbing, built for night", 1] ],
     specs: [["First flight", "1981"], ["Revealed", "1988"], ["Retired", "2008"]],
-    credit: "Clip: War Thunder 'Firebirds' trailer, Gaijin (YouTube) · Photo: U.S. Air Force, SMSgt Kim Frey (public domain)",
-    notes: "The F-117 Nighthawk was the first operational aircraft designed around stealth. It is built from flat panels, facets, that reflect radar away like a mirror. It first flew in 1981, stayed secret until 1988, and officially retired in 2008. No afterburners: hot exhaust would give it away. The clip is game footage from War Thunder's official trailer; the photo shows real F-117s on one of their last missions." },
+    credit: "Clip: \"F-117 Nighthawk UP CLOSE at Sentry Savannah 2022\", Mike Killian (YouTube) · Photo: U.S. Air Force, SMSgt Kim Frey (public domain)",
+    notes: "The F-117 Nighthawk was the first operational aircraft designed around stealth. It is built from flat panels, facets, that reflect radar away like a mirror. It first flew in 1981, stayed secret until 1988, and officially retired in 2008. No afterburners: hot exhaust would give it away. The clip shows real F-117s up close at Exercise Sentry Savannah in 2022; the photo shows F-117s on one of their last official missions." },
 
   { id: "timeline", photo: "img/sky.jpg", streak: "img/streak_sky.jpg", fx: 0, fy: .35, over: 1.15, heading: 90,
     shade: "linear-gradient(180deg, rgba(5,8,12,.6), rgba(5,8,12,.4) 50%, rgba(5,8,12,.65))",
