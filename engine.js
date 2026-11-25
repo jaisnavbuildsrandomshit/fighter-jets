@@ -98,7 +98,9 @@
     let holdT = null;
     box.pause = () => { live = false; want = null; clearInterval(holdT); if (ok) p.pauseVideo(); };
     // "living freeze": keep playing at the slowest speed and loop the same split second, so YouTube never draws its pause icon
-    box.hold = t => { live = true; clearInterval(holdT); if (!ok) return; p.setPlaybackRate(.25); rate = .25; };   // online fallback: quarter-speed slow motion, no seeking (seeking made YouTube show its spinner)
+    // online fallback: quarter-speed slow motion; only steps back to the freeze point every ~2 s so it never runs into the next shot
+    box.hold = t => { live = true; clearInterval(holdT); if (!ok) return; p.setPlaybackRate(.25); rate = .25;
+      holdT = setInterval(() => { if (p.getCurrentTime() > t + .45) p.seekTo(t, true); }, 150); };
   }
   SCENES.forEach((s, i) => { if (s.yt) ytVid($(".vid", els[i]), s); });
   // a clip file you saved yourself (vid/*.mp4, never uploaded) replaces the YouTube player: real video = clean pause, no YouTube icon
