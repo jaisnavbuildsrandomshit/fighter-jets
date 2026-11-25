@@ -43,7 +43,7 @@ Fonts: Archivo Black, Barlow Condensed, Inter and Share Tech Mono (Google Fonts)
 |---|---|---|
 | F-22 | [F-22 Afterburner Launches during PF 22-4 (4K Slowmo)](https://www.dvidshub.net/video/838229), U.S. Air Force, streamed from DVIDS | Public domain |
 | F/A-18 Super Hornet | [Navy Super Hornets conduct flight operations during Northern Edge 2021](https://www.dvidshub.net/video/793950), U.S. Navy via DVIDS | Public domain |
-| Su-35 | [Su-35S multipurpose fighter](https://commons.wikimedia.org/wiki/File:Su-35S_multipurpose_fighter.webm), Russian Ministry of Defence (mil.ru), streamed from Wikimedia Commons | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| Su-35 | [Sukhoi Su-35 in Action](https://www.youtube.com/watch?v=1tMxxfXg34I), Haci Productions (YouTube embed); freeze frame from [Su-35S multipurpose fighter](https://commons.wikimedia.org/wiki/File:Su-35S_multipurpose_fighter.webm), Russian Ministry of Defence (mil.ru) | Clip © respective owners; freeze frame [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | B-2 Spirit | [KC-135 refuels B-2 Spirit for Super Bowl LV](https://www.dvidshub.net/video/782929), U.S. Air Force via DVIDS | Public domain |
 | Su-57 | [Su-57 Felon Maneuverability](https://www.youtube.com/watch?v=PuW6Ha2sBaQ), Haci Productions (YouTube embed) | © respective owners |
 | F-14 Tomcat | [DCS F-14A release trailer](https://www.youtube.com/watch?v=RTWSu4Uxsd4), Heatblur Simulations (game footage, official YouTube embed) | © Heatblur Simulations |
