@@ -271,7 +271,7 @@
   }
   /* ---------- edit-style footage: flash cut, zoom punch, RGB split, letterbox, speed ramp, freeze ---------- */
   // pre-load the start of the next clip while the current scene is on screen
-  function prime(n) { const s = SCENES[n], v = s && (s.video || s.yt) && $(".vid", els[n]); if (v && v.paused) { v.preload = "auto"; v.currentTime = s.vStart; } }
+  function prime(n) { const s = SCENES[n], v = s && (s.video || s.yt) && $(".vid", els[n]); if (v && v.paused) { v.preload = "auto"; v.currentTime = s.yt ? Math.max(0, s.vStart - 1.5) : s.vStart; } }
   function flash(tl, at, k = .9, d = .35) { tl.fromTo("#flash", { opacity: k }, { opacity: 0, duration: d, ease: "power2.out" }, at); }
   function rgb(tl, el, at, dur) { /* off: filters on 4K video cause stutter */ }
   function rgbOff(tl, el, at, dur) {
@@ -308,7 +308,8 @@
   function freezeHit(n) {
     const sec = els[n], bgl = $(".bgl", sec), v = $(".vid", sec), tl = gsap.timeline();
     // YouTube flashes a small pause icon when it stops: a full white flash covers it
-    if (SCENES[n].yt) flash(tl, 0, 1, .75); else flash(tl, 0, .55);
+    // YouTube draws a pause icon on any stopped clip: never show a stopped YouTube frame, slam into the jet's still photo under a full white flash instead
+    if (SCENES[n].yt) { gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); flash(tl, 0, 1, .75); } else flash(tl, 0, .55);
     tl.fromTo(bgl, { scale: 1.12 }, { scale: 1, duration: .55, ease: "power4.out" }, 0);
 
     letterbox(tl, .3, false);
@@ -409,12 +410,13 @@
     const v = $(".vid", sec);
     gsap.set($(".photo", sec), { opacity: 0 }); gsap.set(v, { opacity: 1 });
     gsap.set(["#lbt", "#lbb"], { height: 118 });
-    if (Math.abs(v.currentTime - s.vStart) > .05) v.currentTime = s.vStart;
+    const cue = s.yt ? Math.max(0, s.vStart - 1.5) : s.vStart;   // YouTube clips start 1.5 s early, hidden, so its start-up icon is gone before we show it
+    if (Math.abs(v.currentTime - cue) > .05) v.currentTime = cue;
     v.playbackRate = s.rate || 1; v.play().catch(() => {}); watch(n);
     // YouTube shows a play icon as it starts: stay black until it has faded
     if (s.yt) {
       gsap.set(v, { opacity: 0 }); const tk = v._tok;
-      const reveal = () => { if (v._tok !== tk) return; if (v.paused) return setTimeout(reveal, 100); gsap.to(v, { opacity: 1, duration: .08, delay: .55 }); };
+      const reveal = () => { if (v._tok !== tk) return; if (v.paused || v.currentTime < s.vStart - .1) return setTimeout(reveal, 60); gsap.set(v, { opacity: 1 }); };
       reveal();
     }
     // if the clip cannot play here, fall back to the freeze-frame photo so the slide still works
