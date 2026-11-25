@@ -309,7 +309,7 @@
     const sec = els[n], bgl = $(".bgl", sec), v = $(".vid", sec), tl = gsap.timeline();
     // YouTube flashes a small pause icon when it stops: a full white flash covers it
     // YouTube draws a pause icon on any stopped clip: never show a stopped YouTube frame, slam into the jet's still photo under a full white flash instead
-    if (SCENES[n].yt) { gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); flash(tl, 0, 1, .75); } else flash(tl, 0, .55);
+    if (SCENES[n].yt) { gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); flash(tl, 0, 1, .75); } else { gsap.set(v, { opacity: 1 }); flash(tl, 0, .55); }
     tl.fromTo(bgl, { scale: 1.12 }, { scale: 1, duration: .55, ease: "power4.out" }, 0);
 
     letterbox(tl, .3, false);
@@ -413,10 +413,13 @@
     const cue = s.yt ? Math.max(0, s.vStart - 1.5) : s.vStart;   // YouTube clips start 1.5 s early, hidden, so its start-up icon is gone before we show it
     if (Math.abs(v.currentTime - cue) > .05) v.currentTime = cue;
     v.playbackRate = s.rate || 1; v.play().catch(() => {}); watch(n);
-    // YouTube shows a play icon as it starts: stay black until it has faded
-    if (s.yt) {
+    // stay black until the clip is really playing from its start point: no stale frame from before the seek
+    // (and, for YouTube, no start-up play icon)
+    {
       gsap.set(v, { opacity: 0 }); const tk = v._tok;
-      const reveal = () => { if (v._tok !== tk) return; if (v.paused || v.currentTime < s.vStart - .1) return setTimeout(reveal, 60); gsap.set(v, { opacity: 1 }); };
+      const ready = () => s.yt ? !v.paused && v.currentTime >= s.vStart - .1
+                               : !v.paused && !v.seeking && v.readyState >= 3 && Math.abs(v.currentTime - s.vStart) < 1.5;
+      const reveal = () => { if (v._tok !== tk) return; if (!ready()) return requestAnimationFrame(reveal); gsap.set(v, { opacity: 1 }); };
       reveal();
     }
     // if the clip cannot play here, fall back to the freeze-frame photo so the slide still works
