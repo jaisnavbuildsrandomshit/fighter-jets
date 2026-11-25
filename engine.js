@@ -89,35 +89,14 @@
       }, set: x => { t = x; lastR = -1; if (ok) { p.seekTo(x, true); if (!live) p.pauseVideo(); } } },   // seeking a cued player starts it: keep it paused unless told to play
       paused: { get: () => st !== 1 && st !== 3 },
       ended: { get: () => st === 0 },
-      buffering: { get: () => st === 3 || st === -1 || st === 5 },   // YouTube shows a spinner or blank player in these states
       readyState: { get: () => ok ? 4 : 0 },
       playbackRate: { get: () => rate, set: x => { if (Math.abs(x - rate) < .05) return; rate = x; if (ok) p.setPlaybackRate(x); } },
       preload: { get: () => "auto", set() {} }
     });
     box.play = () => { live = true; const run = () => { p.setPlaybackRate(rate); p.playVideo(); }; if (ok) run(); else want = run; return Promise.resolve(); };
-    let holdT = null;
-    box.pause = () => { live = false; want = null; clearInterval(holdT); if (ok) p.pauseVideo(); };
-    // "living freeze": keep playing at the slowest speed and loop the same split second, so YouTube never draws its pause icon
-    // online fallback: quarter-speed slow motion; only steps back to the freeze point every ~2 s so it never runs into the next shot
-    box.hold = t => { live = true; clearInterval(holdT); if (!ok) return; p.setPlaybackRate(.25); rate = .25;
-      holdT = setInterval(() => { if (p.getCurrentTime() > t + .45) p.seekTo(t, true); }, 150); };
+    box.pause = () => { live = false; want = null; if (ok) p.pauseVideo(); };
   }
   SCENES.forEach((s, i) => { if (s.yt) ytVid($(".vid", els[i]), s); });
-  // a clip file you saved yourself (vid/*.mp4, never uploaded) replaces the YouTube player: real video = clean pause, no YouTube icon
-  SCENES.forEach((s, i) => {
-    if (!s.local || !s.yt) return;
-    const probe = document.createElement("video");
-    probe.muted = true; probe.playsInline = true; probe.preload = "metadata"; probe.src = s.local;
-    probe.addEventListener("loadedmetadata", () => {
-      const old = $(".vid", els[i]);
-      probe.className = "vid"; probe.style.cssText = old.style.cssText;
-      // the YouTube player is cropped 112% around its centre: match it so the callouts land on the same spots
-      probe.style.transform = "scale(1.12)"; probe.style.transformOrigin = "50% 50%";
-      old.replaceWith(probe);
-      s.video = s.local; delete s.yt; delete s.ytHold;
-      if (i === cur || i === cur + 1) prime(i);
-    }, { once: true });
-  });
 
   function layout(i) {
     const s = SCENES[i], sec = els[i], photo = $(".photo", sec);
@@ -317,30 +296,20 @@
   // speed ramp: footage runs fast, then eases into slow motion and slams to a freeze
   function watch(n) {
     const s = SCENES[n], v = $(".vid", els[n]), tok = {}; v._tok = tok;
-    let kick = 0;
     const tick = () => {
       if (v._tok !== tok) return;
-      // YouTube can stop a clip on its own: never show it stopped (pause icon / wrong frame), hide it and restart it
-      if (s.yt) {
-        const now = performance.now();
-        if (v.paused || v.buffering) { gsap.set(v, { opacity: 0 }); if (v.paused && now - kick > 600) { kick = now; v.play(); } }
-        else if (els[n]._live && v.currentTime >= s.vStart - .1) gsap.set(v, { opacity: 1 });
-      }
       const left = s.vFreeze - v.currentTime;
       if (left <= (s.slow || 1.0)) v.playbackRate = Math.max(.5, .5 + left * .5);
-      if (left <= 0 || v.ended) { v._tok = null; if (s.ytHold && v.hold) v.hold(s.vFreeze); else v.pause(); freezeHit(n); return; }
+      if (left <= 0 || v.ended) { v._tok = null; v.pause(); freezeHit(n); return; }
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
   }
   function freezeHit(n) {
     const sec = els[n], bgl = $(".bgl", sec), v = $(".vid", sec), tl = gsap.timeline();
-    if (sec._showNow) sec._showNow();   // a clip that never got going still cuts in here
-    // YouTube draws a pause icon on any stopped clip: "hold" clips keep playing in a frozen loop; others slam into the jet's still photo
-    if (v._fallback) flash(tl, 0, .55);   // a clip that never played keeps its still photo, never its unplayed first frame
-    else if (SCENES[n].yt && SCENES[n].ytHold) { gsap.set(v, { opacity: 1 }); flash(tl, 0, .55); }
-    else if (SCENES[n].yt) { gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); flash(tl, 0, 1, .75); }
-    else { gsap.set(v, { opacity: 1 }); flash(tl, 0, .55); }
+    // YouTube flashes a small pause icon when it stops: a full white flash covers it
+    // YouTube draws a pause icon on any stopped clip: never show a stopped YouTube frame, slam into the jet's still photo under a full white flash instead
+    if (SCENES[n].yt) { gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); flash(tl, 0, 1, .75); } else flash(tl, 0, .55);
     tl.fromTo(bgl, { scale: 1.12 }, { scale: 1, duration: .55, ease: "power4.out" }, 0);
 
     letterbox(tl, .3, false);
@@ -440,53 +409,40 @@
     if (!s.video && !s.yt) { gsap.set($(".photo", sec), { opacity: 1 }); return false; }
     const v = $(".vid", sec);
     gsap.set($(".photo", sec), { opacity: 0 }); gsap.set(v, { opacity: 1 });
-    // the cut happens only once this clip is really playing: until then the previous slide stays on screen
-    sec._live = false; v._fallback = false; gsap.set($$(".labs, svg.calls", sec), { display: "" });
-    sec._showNow = () => { if (sec._live) return; sec._live = true; gsap.set(sec, { opacity: 1 }); gsap.set(["#lbt", "#lbb"], { height: 118 });
-      const f = sec._onShown; sec._onShown = null; if (f) f(); };
+    gsap.set(["#lbt", "#lbb"], { height: 118 });
     const cue = s.yt ? Math.max(0, s.vStart - 1.5) : s.vStart;   // YouTube clips start 1.5 s early, hidden, so its start-up icon is gone before we show it
-    v.playbackRate = s.rate || 1;
-    if (s.yt) { v.play(); v.currentTime = cue; }   // YouTube: say "play" before seeking, so the seek can't queue a pause after it
-    else { if (Math.abs(v.currentTime - cue) > .05) v.currentTime = cue; v.play().catch(() => {}); }
-    watch(n);
-    // stay black until the clip is really playing from its start point: no stale frame from before the seek
-    // (and, for YouTube, no start-up play icon)
-    {
+    if (Math.abs(v.currentTime - cue) > .05) v.currentTime = cue;
+    v.playbackRate = s.rate || 1; v.play().catch(() => {}); watch(n);
+    // YouTube shows a play icon as it starts: stay black until it has faded
+    if (s.yt) {
       gsap.set(v, { opacity: 0 }); const tk = v._tok;
-      const ready = () => s.yt ? !v.paused && !v.buffering && v.currentTime >= s.vStart - .1
-                               : !v.paused && !v.seeking && v.readyState >= 3 && Math.abs(v.currentTime - s.vStart) < 1.5;
-      const reveal = () => { if (v._tok !== tk) return; if (!ready()) return requestAnimationFrame(reveal); gsap.set(v, { opacity: 1 }); sec._showNow(); };
+      const reveal = () => { if (v._tok !== tk) return; if (v.paused || v.currentTime < s.vStart - .1) return setTimeout(reveal, 60); gsap.set(v, { opacity: 1 }); };
       reveal();
     }
     // if the clip cannot play here, fall back to the freeze-frame photo so the slide still works
     const tok = v._tok;
-    setTimeout(() => { if (v._tok === tok && v.currentTime < s.vStart + .2 && !(s.yt && v.readyState)) {
-      v._tok = null; v._fallback = true; v.pause(); gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 });
-      if (s.ytHold) gsap.set($$(".labs, svg.calls", sec), { display: "none" });   // its callouts were placed on the video frame, not on this still
-      freezeHit(n); } }, s.yt ? 15000 : 12000);
+    setTimeout(() => { if (v._tok === tok && v.currentTime < s.vStart + .2 && !(s.yt && v.readyState)) { v._tok = null; v.pause(); gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); freezeHit(n); } }, s.yt ? 15000 : 6000);
     // safety net: if the clip stalls mid-play and never reaches its freeze point, freeze where it is so the callouts still come in
-    setTimeout(() => { if (v._tok === tok) { v._tok = null; if (s.ytHold && v.hold) v.hold(v.currentTime); else v.pause(); freezeHit(n); } }, ((s.vFreeze - s.vStart) / (s.rate || 1) + (s.yt ? 12 : 5)) * 1000);
+    setTimeout(() => { if (v._tok === tok) { v._tok = null; v.pause(); freezeHit(n); } }, ((s.vFreeze - s.vStart) / (s.rate || 1) + (s.yt ? 12 : 5)) * 1000);
     return true;
   }
   function go(n) {
     if (busy || n === cur || n < 0 || n >= SCENES.length) return;
     busy = true; if (timer) timer.kill(); if (ambient) ambient.kill();
     const from = els[cur], to = els[n], s = SCENES[n];
-    const fv = $(".vid", from); if (fv) fv._tok = null;   // keep the old shot on screen (still frozen) until the new clip is playing
-    gsap.killTweensOf(["#lbt", "#lbb"]);
+    const fv = $(".vid", from); if (fv) { fv._tok = null; fv.pause(); }
+    gsap.killTweensOf(["#lbt", "#lbb"]); gsap.set(["#lbt", "#lbb"], { height: 0 });
     layout(n); resetText(to);
-    to.classList.add("on"); gsap.set(to, { zIndex: 3, opacity: (s.video || s.yt) ? 0 : 1 }); gsap.set(from, { zIndex: 2 });
+    to.classList.add("on"); gsap.set(to, { zIndex: 3, opacity: 1 }); gsap.set(from, { zIndex: 2 });
+    const isVid = show(n);
     const done = () => {
-      if (fv) fv.pause();
       from.classList.remove("on"); gsap.set(from, { clearProps: "zIndex,opacity" });
       gsap.set($(".cam", from), { clearProps: "all" }); gsap.set($(".bgl", from), { clearProps: "transform" });
       if (fv) prime(cur);   // re-cue the clip we just left, in case we come back
       cur = n; prime(n + 1); busy = false; hud(); startAmbient(n); restartTimer();
     };
-    to._onShown = null;
-    const isVid = show(n);
-    if (isVid) { if (to._live) done(); else to._onShown = done; }
-    else { gsap.set(["#lbt", "#lbb"], { height: 0 }); gsap.fromTo(to, { opacity: 0 }, { opacity: 1, duration: .45, ease: "power1.out", onComplete: done }); gsap.delayedCall(.35, () => enterText(n)); }
+    if (isVid) done();
+    else { gsap.fromTo(to, { opacity: 0 }, { opacity: 1, duration: .45, ease: "power1.out", onComplete: done }); gsap.delayedCall(.35, () => enterText(n)); }
   }
 
   /* ---------- HUD / timer / keys ---------- */
