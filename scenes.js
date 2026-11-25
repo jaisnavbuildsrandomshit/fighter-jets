@@ -79,11 +79,5 @@ window.SCENES = [
     head: [["45 YEARS OF", "HIDING FROM RADAR"], "top"], headSize: 110,
     timeline: [["1981", "F-117", "First stealth jet flies"], ["1989", "B-2", "Stealth flying wing"], ["2005", "F-22", "Stealth fighter in service"], ["2010", "Su-57", "Russia's stealth jet flies"], ["2025", "F-47", "Next generation announced"]],
     credit: "View from an airliner window · Photo: Famartin, CC BY-SA 4.0",
-    notes: "Put them on one line: the F-117 flying in 1981, the B-2 in 1989, the F-22 in service in 2005, the Su-57 flying in 2010, and in 2025 the US picked Boeing's F-47 as the next generation. Each one made it harder for radar to see what's coming." },
-
-  { id: "end", photo: "img/title.jpg", streak: "img/streak_end.jpg", fx: .3, fy: .6, over: 1.3, heading: 315,
-    shade: "linear-gradient(0deg, rgba(10,7,3,.75) 0%, rgba(10,7,3,0) 55%)",
-    head: [["END OF", "BRIEFING."], "bottom"], end: true,
-    credit: "F-22 Raptor at twilight · U.S. Air Force photo by 2nd Lt. Samuel Eckholm (public domain)",
-    notes: "Carrier jet, the Flanker, the rainbow Sukhoi, the Raptor, the Tomcat and two stealth pioneers. Thanks for listening." }
+    notes: "Put them on one line: the F-117 flying in 1981, the B-2 in 1989, the F-22 in service in 2005, the Su-57 flying in 2010, and in 2025 the US picked Boeing's F-47 as the next generation. Each one made it harder for radar to see what's coming." }
 ];

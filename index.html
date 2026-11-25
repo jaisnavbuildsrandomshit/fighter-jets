@@ -31,8 +31,8 @@
   .photo { position: absolute; max-width: none; user-select: none; }
   .vid { position: absolute; max-width: none; user-select: none; }
   .vid.yt { overflow: hidden; pointer-events: none; }
-  /* player rendered at 2x then scaled down: sharper picture, and YouTube's centre icon ends up half size */
-  .vid.yt iframe { position: absolute; left: -6%; top: -12%; width: 224%; height: 248%; transform: scale(.5); transform-origin: 0 0; border: 0; pointer-events: none; }
+  /* player cropped slightly so YouTube's title bar and logo stay outside the frame */
+  .vid.yt iframe { position: absolute; left: -6%; top: -12%; width: 112%; height: 124%; border: 0; pointer-events: none; }
   .shade { position: absolute; inset: -6%; pointer-events: none; }
 
   /* the flying jet + afterburners */

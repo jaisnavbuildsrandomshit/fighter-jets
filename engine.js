@@ -98,7 +98,7 @@
     let holdT = null;
     box.pause = () => { live = false; want = null; clearInterval(holdT); if (ok) p.pauseVideo(); };
     // "living freeze": keep playing at the slowest speed and loop the same split second, so YouTube never draws its pause icon
-    box.hold = t => { live = true; clearInterval(holdT); if (!ok) return; p.setPlaybackRate(.25); rate = .25; p.seekTo(t, true); holdT = setInterval(() => p.seekTo(t, true), 450); };
+    box.hold = t => { live = true; clearInterval(holdT); if (!ok) return; p.setPlaybackRate(.25); rate = .25; p.seekTo(t, true); holdT = setInterval(() => p.seekTo(t, true), 250); };
   }
   SCENES.forEach((s, i) => { if (s.yt) ytVid($(".vid", els[i]), s); });
 
