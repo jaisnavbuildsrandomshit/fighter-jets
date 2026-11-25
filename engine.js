@@ -89,6 +89,7 @@
       }, set: x => { t = x; lastR = -1; if (ok) { p.seekTo(x, true); if (!live) p.pauseVideo(); } } },   // seeking a cued player starts it: keep it paused unless told to play
       paused: { get: () => st !== 1 && st !== 3 },
       ended: { get: () => st === 0 },
+      buffering: { get: () => st === 3 || st === -1 || st === 5 },   // YouTube shows a spinner or blank player in these states
       readyState: { get: () => ok ? 4 : 0 },
       playbackRate: { get: () => rate, set: x => { if (Math.abs(x - rate) < .05) return; rate = x; if (ok) p.setPlaybackRate(x); } },
       preload: { get: () => "auto", set() {} }
@@ -305,7 +306,7 @@
       // YouTube can stop a clip on its own: never show it stopped (pause icon / wrong frame), hide it and restart it
       if (s.yt) {
         const now = performance.now();
-        if (v.paused) { gsap.set(v, { opacity: 0 }); if (now - kick > 600) { kick = now; v.play(); } }
+        if (v.paused || v.buffering) { gsap.set(v, { opacity: 0 }); if (v.paused && now - kick > 600) { kick = now; v.play(); } }
         else if (els[n]._live && v.currentTime >= s.vStart - .1) gsap.set(v, { opacity: 1 });
       }
       const left = s.vFreeze - v.currentTime;
@@ -318,10 +319,11 @@
   function freezeHit(n) {
     const sec = els[n], bgl = $(".bgl", sec), v = $(".vid", sec), tl = gsap.timeline();
     if (sec._showNow) sec._showNow();   // a clip that never got going still cuts in here
-    // YouTube flashes a small pause icon when it stops: a full white flash covers it
-    // YouTube draws a pause icon on any stopped clip: never show a stopped YouTube frame, slam into the jet's still photo under a full white flash instead
-    if (SCENES[n].yt && SCENES[n].ytHold) { gsap.set(v, { opacity: 1 }); flash(tl, 0, .55); }
-    else if (SCENES[n].yt) { gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); flash(tl, 0, 1, .75); } else { gsap.set(v, { opacity: 1 }); flash(tl, 0, .55); }
+    // YouTube draws a pause icon on any stopped clip: "hold" clips keep playing in a frozen loop; others slam into the jet's still photo
+    if (v._fallback) flash(tl, 0, .55);   // a clip that never played keeps its still photo, never its unplayed first frame
+    else if (SCENES[n].yt && SCENES[n].ytHold) { gsap.set(v, { opacity: 1 }); flash(tl, 0, .55); }
+    else if (SCENES[n].yt) { gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); flash(tl, 0, 1, .75); }
+    else { gsap.set(v, { opacity: 1 }); flash(tl, 0, .55); }
     tl.fromTo(bgl, { scale: 1.12 }, { scale: 1, duration: .55, ease: "power4.out" }, 0);
 
     letterbox(tl, .3, false);
@@ -422,7 +424,7 @@
     const v = $(".vid", sec);
     gsap.set($(".photo", sec), { opacity: 0 }); gsap.set(v, { opacity: 1 });
     // the cut happens only once this clip is really playing: until then the previous slide stays on screen
-    sec._live = false;
+    sec._live = false; v._fallback = false; gsap.set($$(".labs, svg.calls", sec), { display: "" });
     sec._showNow = () => { if (sec._live) return; sec._live = true; gsap.set(sec, { opacity: 1 }); gsap.set(["#lbt", "#lbb"], { height: 118 });
       const f = sec._onShown; sec._onShown = null; if (f) f(); };
     const cue = s.yt ? Math.max(0, s.vStart - 1.5) : s.vStart;   // YouTube clips start 1.5 s early, hidden, so its start-up icon is gone before we show it
@@ -434,14 +436,17 @@
     // (and, for YouTube, no start-up play icon)
     {
       gsap.set(v, { opacity: 0 }); const tk = v._tok;
-      const ready = () => s.yt ? !v.paused && v.currentTime >= s.vStart - .1
+      const ready = () => s.yt ? !v.paused && !v.buffering && v.currentTime >= s.vStart - .1
                                : !v.paused && !v.seeking && v.readyState >= 3 && Math.abs(v.currentTime - s.vStart) < 1.5;
       const reveal = () => { if (v._tok !== tk) return; if (!ready()) return requestAnimationFrame(reveal); gsap.set(v, { opacity: 1 }); sec._showNow(); };
       reveal();
     }
     // if the clip cannot play here, fall back to the freeze-frame photo so the slide still works
     const tok = v._tok;
-    setTimeout(() => { if (v._tok === tok && v.currentTime < s.vStart + .2 && !(s.yt && v.readyState)) { v._tok = null; v.pause(); gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); freezeHit(n); } }, s.yt ? 15000 : 6000);
+    setTimeout(() => { if (v._tok === tok && v.currentTime < s.vStart + .2 && !(s.yt && v.readyState)) {
+      v._tok = null; v._fallback = true; v.pause(); gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 });
+      if (s.ytHold) gsap.set($$(".labs, svg.calls", sec), { display: "none" });   // its callouts were placed on the video frame, not on this still
+      freezeHit(n); } }, s.yt ? 15000 : 12000);
     // safety net: if the clip stalls mid-play and never reaches its freeze point, freeze where it is so the callouts still come in
     setTimeout(() => { if (v._tok === tok) { v._tok = null; if (s.ytHold && v.hold) v.hold(v.currentTime); else v.pause(); freezeHit(n); } }, ((s.vFreeze - s.vStart) / (s.rate || 1) + (s.yt ? 12 : 5)) * 1000);
     return true;
