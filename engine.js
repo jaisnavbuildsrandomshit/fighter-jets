@@ -299,11 +299,18 @@
   // speed ramp: footage runs fast, then eases into slow motion and slams to a freeze
   function watch(n) {
     const s = SCENES[n], v = $(".vid", els[n]), tok = {}; v._tok = tok;
+    let kick = 0;
     const tick = () => {
       if (v._tok !== tok) return;
+      // YouTube can stop a clip on its own: never show it stopped (pause icon / wrong frame), hide it and restart it
+      if (s.yt) {
+        const now = performance.now();
+        if (v.paused) { gsap.set(v, { opacity: 0 }); if (now - kick > 600) { kick = now; v.play(); } }
+        else if (els[n]._live && v.currentTime >= s.vStart - .1) gsap.set(v, { opacity: 1 });
+      }
       const left = s.vFreeze - v.currentTime;
       if (left <= (s.slow || 1.0)) v.playbackRate = Math.max(.5, .5 + left * .5);
-      if (left <= 0 || v.ended) { v._tok = null; if (s.hold && v.hold) v.hold(s.vFreeze); else v.pause(); freezeHit(n); return; }
+      if (left <= 0 || v.ended) { v._tok = null; if (s.ytHold && v.hold) v.hold(s.vFreeze); else v.pause(); freezeHit(n); return; }
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
@@ -313,7 +320,7 @@
     if (sec._showNow) sec._showNow();   // a clip that never got going still cuts in here
     // YouTube flashes a small pause icon when it stops: a full white flash covers it
     // YouTube draws a pause icon on any stopped clip: never show a stopped YouTube frame, slam into the jet's still photo under a full white flash instead
-    if (SCENES[n].yt && SCENES[n].hold) { gsap.set(v, { opacity: 1 }); flash(tl, 0, .55); }
+    if (SCENES[n].yt && SCENES[n].ytHold) { gsap.set(v, { opacity: 1 }); flash(tl, 0, .55); }
     else if (SCENES[n].yt) { gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); flash(tl, 0, 1, .75); } else { gsap.set(v, { opacity: 1 }); flash(tl, 0, .55); }
     tl.fromTo(bgl, { scale: 1.12 }, { scale: 1, duration: .55, ease: "power4.out" }, 0);
 
@@ -419,8 +426,10 @@
     sec._showNow = () => { if (sec._live) return; sec._live = true; gsap.set(sec, { opacity: 1 }); gsap.set(["#lbt", "#lbb"], { height: 118 });
       const f = sec._onShown; sec._onShown = null; if (f) f(); };
     const cue = s.yt ? Math.max(0, s.vStart - 1.5) : s.vStart;   // YouTube clips start 1.5 s early, hidden, so its start-up icon is gone before we show it
-    if (Math.abs(v.currentTime - cue) > .05) v.currentTime = cue;
-    v.playbackRate = s.rate || 1; v.play().catch(() => {}); watch(n);
+    v.playbackRate = s.rate || 1;
+    if (s.yt) { v.play(); v.currentTime = cue; }   // YouTube: say "play" before seeking, so the seek can't queue a pause after it
+    else { if (Math.abs(v.currentTime - cue) > .05) v.currentTime = cue; v.play().catch(() => {}); }
+    watch(n);
     // stay black until the clip is really playing from its start point: no stale frame from before the seek
     // (and, for YouTube, no start-up play icon)
     {
@@ -434,7 +443,7 @@
     const tok = v._tok;
     setTimeout(() => { if (v._tok === tok && v.currentTime < s.vStart + .2 && !(s.yt && v.readyState)) { v._tok = null; v.pause(); gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); freezeHit(n); } }, s.yt ? 15000 : 6000);
     // safety net: if the clip stalls mid-play and never reaches its freeze point, freeze where it is so the callouts still come in
-    setTimeout(() => { if (v._tok === tok) { v._tok = null; if (s.hold && v.hold) v.hold(v.currentTime); else v.pause(); freezeHit(n); } }, ((s.vFreeze - s.vStart) / (s.rate || 1) + (s.yt ? 12 : 5)) * 1000);
+    setTimeout(() => { if (v._tok === tok) { v._tok = null; if (s.ytHold && v.hold) v.hold(v.currentTime); else v.pause(); freezeHit(n); } }, ((s.vFreeze - s.vStart) / (s.rate || 1) + (s.yt ? 12 : 5)) * 1000);
     return true;
   }
   function go(n) {
