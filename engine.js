@@ -94,7 +94,10 @@
       preload: { get: () => "auto", set() {} }
     });
     box.play = () => { live = true; const run = () => { p.setPlaybackRate(rate); p.playVideo(); }; if (ok) run(); else want = run; return Promise.resolve(); };
-    box.pause = () => { live = false; want = null; if (ok) p.pauseVideo(); };
+    let holdT = null;
+    box.pause = () => { live = false; want = null; clearInterval(holdT); if (ok) p.pauseVideo(); };
+    // "living freeze": keep playing at the slowest speed and loop the same split second, so YouTube never draws its pause icon
+    box.hold = t => { live = true; clearInterval(holdT); if (!ok) return; p.setPlaybackRate(.25); rate = .25; p.seekTo(t, true); holdT = setInterval(() => p.seekTo(t, true), 450); };
   }
   SCENES.forEach((s, i) => { if (s.yt) ytVid($(".vid", els[i]), s); });
 
@@ -300,16 +303,18 @@
       if (v._tok !== tok) return;
       const left = s.vFreeze - v.currentTime;
       if (left <= (s.slow || 1.0)) v.playbackRate = Math.max(.5, .5 + left * .5);
-      if (left <= 0 || v.ended) { v._tok = null; v.pause(); freezeHit(n); return; }
+      if (left <= 0 || v.ended) { v._tok = null; if (s.hold && v.hold) v.hold(s.vFreeze); else v.pause(); freezeHit(n); return; }
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
   }
   function freezeHit(n) {
     const sec = els[n], bgl = $(".bgl", sec), v = $(".vid", sec), tl = gsap.timeline();
+    if (sec._showNow) sec._showNow();   // a clip that never got going still cuts in here
     // YouTube flashes a small pause icon when it stops: a full white flash covers it
     // YouTube draws a pause icon on any stopped clip: never show a stopped YouTube frame, slam into the jet's still photo under a full white flash instead
-    if (SCENES[n].yt) { gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); flash(tl, 0, 1, .75); } else { gsap.set(v, { opacity: 1 }); flash(tl, 0, .55); }
+    if (SCENES[n].yt && SCENES[n].hold) { gsap.set(v, { opacity: 1 }); flash(tl, 0, .55); }
+    else if (SCENES[n].yt) { gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); flash(tl, 0, 1, .75); } else { gsap.set(v, { opacity: 1 }); flash(tl, 0, .55); }
     tl.fromTo(bgl, { scale: 1.12 }, { scale: 1, duration: .55, ease: "power4.out" }, 0);
 
     letterbox(tl, .3, false);
@@ -409,7 +414,10 @@
     if (!s.video && !s.yt) { gsap.set($(".photo", sec), { opacity: 1 }); return false; }
     const v = $(".vid", sec);
     gsap.set($(".photo", sec), { opacity: 0 }); gsap.set(v, { opacity: 1 });
-    gsap.set(["#lbt", "#lbb"], { height: 118 });
+    // the cut happens only once this clip is really playing: until then the previous slide stays on screen
+    sec._live = false;
+    sec._showNow = () => { if (sec._live) return; sec._live = true; gsap.set(sec, { opacity: 1 }); gsap.set(["#lbt", "#lbb"], { height: 118 });
+      const f = sec._onShown; sec._onShown = null; if (f) f(); };
     const cue = s.yt ? Math.max(0, s.vStart - 1.5) : s.vStart;   // YouTube clips start 1.5 s early, hidden, so its start-up icon is gone before we show it
     if (Math.abs(v.currentTime - cue) > .05) v.currentTime = cue;
     v.playbackRate = s.rate || 1; v.play().catch(() => {}); watch(n);
@@ -419,33 +427,35 @@
       gsap.set(v, { opacity: 0 }); const tk = v._tok;
       const ready = () => s.yt ? !v.paused && v.currentTime >= s.vStart - .1
                                : !v.paused && !v.seeking && v.readyState >= 3 && Math.abs(v.currentTime - s.vStart) < 1.5;
-      const reveal = () => { if (v._tok !== tk) return; if (!ready()) return requestAnimationFrame(reveal); gsap.set(v, { opacity: 1 }); };
+      const reveal = () => { if (v._tok !== tk) return; if (!ready()) return requestAnimationFrame(reveal); gsap.set(v, { opacity: 1 }); sec._showNow(); };
       reveal();
     }
     // if the clip cannot play here, fall back to the freeze-frame photo so the slide still works
     const tok = v._tok;
     setTimeout(() => { if (v._tok === tok && v.currentTime < s.vStart + .2 && !(s.yt && v.readyState)) { v._tok = null; v.pause(); gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); freezeHit(n); } }, s.yt ? 15000 : 6000);
     // safety net: if the clip stalls mid-play and never reaches its freeze point, freeze where it is so the callouts still come in
-    setTimeout(() => { if (v._tok === tok) { v._tok = null; v.pause(); freezeHit(n); } }, ((s.vFreeze - s.vStart) / (s.rate || 1) + (s.yt ? 12 : 5)) * 1000);
+    setTimeout(() => { if (v._tok === tok) { v._tok = null; if (s.hold && v.hold) v.hold(v.currentTime); else v.pause(); freezeHit(n); } }, ((s.vFreeze - s.vStart) / (s.rate || 1) + (s.yt ? 12 : 5)) * 1000);
     return true;
   }
   function go(n) {
     if (busy || n === cur || n < 0 || n >= SCENES.length) return;
     busy = true; if (timer) timer.kill(); if (ambient) ambient.kill();
     const from = els[cur], to = els[n], s = SCENES[n];
-    const fv = $(".vid", from); if (fv) { fv._tok = null; fv.pause(); }
-    gsap.killTweensOf(["#lbt", "#lbb"]); gsap.set(["#lbt", "#lbb"], { height: 0 });
+    const fv = $(".vid", from); if (fv) fv._tok = null;   // keep the old shot on screen (still frozen) until the new clip is playing
+    gsap.killTweensOf(["#lbt", "#lbb"]);
     layout(n); resetText(to);
-    to.classList.add("on"); gsap.set(to, { zIndex: 3, opacity: 1 }); gsap.set(from, { zIndex: 2 });
-    const isVid = show(n);
+    to.classList.add("on"); gsap.set(to, { zIndex: 3, opacity: (s.video || s.yt) ? 0 : 1 }); gsap.set(from, { zIndex: 2 });
     const done = () => {
+      if (fv) fv.pause();
       from.classList.remove("on"); gsap.set(from, { clearProps: "zIndex,opacity" });
       gsap.set($(".cam", from), { clearProps: "all" }); gsap.set($(".bgl", from), { clearProps: "transform" });
       if (fv) prime(cur);   // re-cue the clip we just left, in case we come back
       cur = n; prime(n + 1); busy = false; hud(); startAmbient(n); restartTimer();
     };
-    if (isVid) done();
-    else { gsap.fromTo(to, { opacity: 0 }, { opacity: 1, duration: .45, ease: "power1.out", onComplete: done }); gsap.delayedCall(.35, () => enterText(n)); }
+    to._onShown = null;
+    const isVid = show(n);
+    if (isVid) { if (to._live) done(); else to._onShown = done; }
+    else { gsap.set(["#lbt", "#lbb"], { height: 0 }); gsap.fromTo(to, { opacity: 0 }, { opacity: 1, duration: .45, ease: "power1.out", onComplete: done }); gsap.delayedCall(.35, () => enterText(n)); }
   }
 
   /* ---------- HUD / timer / keys ---------- */
