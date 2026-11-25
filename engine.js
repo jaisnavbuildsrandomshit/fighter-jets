@@ -309,7 +309,8 @@
     const sec = els[n], bgl = $(".bgl", sec), v = $(".vid", sec), tl = gsap.timeline();
     if (sec._showNow) sec._showNow();   // a clip that never got going still cuts in here
     // YouTube draws a pause icon on any stopped clip: never show a stopped YouTube frame, slam into the jet's still photo under a full white flash instead
-    if (SCENES[n].yt) { gsap.set(v, { opacity: 0 }); gsap.set($(".photo", sec), { opacity: 1 }); flash(tl, 0, 1, .75); }
+    // pauseOnClip: the presenter asked for this one to stop on the clip itself (photo only if the clip never played)
+    if (SCENES[n].yt && !(SCENES[n].pauseOnClip && !v._fallback)) { gsap.set(v, { opacity: 0 });gsap.set($(".photo", sec), { opacity: 1 }); flash(tl, 0, 1, .75); }
     else { if (!v._fallback) gsap.set(v, { opacity: 1 }); flash(tl, 0, .55); }
     tl.fromTo(bgl, { scale: 1.12 }, { scale: 1, duration: .55, ease: "power4.out" }, 0);
 
