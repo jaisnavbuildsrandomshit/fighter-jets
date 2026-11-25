@@ -35,7 +35,7 @@ window.SCENES = [
     specs: [["First flight", "2008"], ["Top speed", "Mach 2.25"], ["Engines", "2"]],
     credit: "Clip: \"Sukhoi Su-35 in Action\", Haci Productions (YouTube) · Freeze: Russian Ministry of Defence video (mil.ru), CC BY 4.0",
     notes: "The Su-35 is the most advanced version of the Su-27 Flanker family, first flown in 2008. It isn't stealthy, but it is extremely agile: its engine nozzles swivel, so it can point its nose almost anywhere, even at very low speed. It carries a powerful long-range radar and can reach about Mach 2.25. Footage: Russian Ministry of Defence, CC BY 4.0." },
-  { id: "su57", yt: "PuW6Ha2sBaQ", photo: "img/su57.jpg", vStart: 54.5, vFreeze: 60.8, rate: 1.0, fx: .5, fy: .5, over: 1, heading: 90,
+  { id: "su57", yt: "PuW6Ha2sBaQ", photo: "img/su57.jpg", vStart: 54.0, vFreeze: 59.4, rate: 1.0, fx: .5, fy: .5, over: 1, heading: 90,
     model: "Sukhoi Su-57 Felon", maker: "Russia · 5th generation", head: [["NEVER DOGFIGHT", "A SUKHOI."], "split"],
     calls: [ [300, 220, 205, 300, "VAPOR SHELL", "Close to the speed of sound", 1], [570, 212, 655, 185, "STEALTH SHAPING", "Edges lined up to scatter radar"],
              [506, 242, 560, 390, "THRUST VECTORING", "Nozzles swivel to flip the jet"], [775, 265, 850, 330, "AESA RADAR", "In the nose", 1] ],
