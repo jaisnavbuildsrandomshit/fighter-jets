@@ -4,7 +4,7 @@ A cinematic presentation: seven aircraft. Slides change only when you click or p
 
 **Live:** https://jaisnavbuildsrandomshit.github.io/fighter-jets/
 
-Every jet is a moving clip: it plays, slows into a speed ramp and slams to a freeze frame, then Ace Combat-style lock-on reticles and Watch Dogs-style profiler cards tag its special features. Scenes hard-cut from one jet to the next, with no sound. Four jets use real military footage; the Su-57, F-14 and F-117 have no free real footage, so they use videos embedded from YouTube (Su-57 manoeuvre footage and official F-14 and F-117 game trailers).
+Every jet is a moving clip: it plays, slows into a speed ramp and slams to a freeze frame, then Ace Combat-style lock-on reticles and Watch Dogs-style profiler cards tag its special features. Scenes hard-cut from one jet to the next, with no sound. Four jets use real military footage; the Su-57, F-14 and F-117 have no free real footage, so they use videos embedded from YouTube (Su-57 manoeuvre footage, an official F-14 game trailer and real F-117 low-level footage).
 
 ## Controls
 
@@ -47,6 +47,6 @@ Fonts: Archivo Black, Barlow Condensed, Inter and Share Tech Mono (Google Fonts)
 | B-2 Spirit | [KC-135 refuels B-2 Spirit for Super Bowl LV](https://www.dvidshub.net/video/782929), U.S. Air Force via DVIDS | Public domain |
 | Su-57 | [Su-57 Felon Maneuverability](https://www.youtube.com/watch?v=PuW6Ha2sBaQ), Haci Productions (YouTube embed) | © respective owners |
 | F-14 Tomcat | [DCS F-14A release trailer](https://www.youtube.com/watch?v=RTWSu4Uxsd4), Heatblur Simulations (game footage, official YouTube embed) | © Heatblur Simulations |
-| F-117 | [F-117 Nighthawk UP CLOSE at Sentry Savannah 2022](https://www.youtube.com/watch?v=LJCWxH3TBLk), Mike Killian (YouTube embed) | © Mike Killian |
+| F-117 | [F-117 LOW LEVEL & More !!!](https://www.youtube.com/watch?v=oJDxY_STDjs), spencerhughes2255 (YouTube embed) | © spencerhughes2255 |
 
 YouTube clips are streamed through YouTube's own embedded player, not copied or re-hosted. They never freeze on a paused YouTube frame (YouTube always draws a pause icon there): at the freeze point the slide cuts to a free-licensed photo of the same jet.
